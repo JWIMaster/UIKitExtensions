@@ -13,12 +13,14 @@ extension OAStackView {
                             axis: NSLayoutConstraint.Axis,
                             alignment: OAStackViewAlignment,
                             distribution: OAStackViewDistribution,
-                            spacing: CGFloat = 0
+                            spacing: CGFloat = 0,
+                            useAutoResizingMask: Bool = true
     ) {
         self.init(arrangedSubviews: arrangedSubviews)
         self.axis = axis
         self.alignment = alignment
         self.distribution = distribution
+        self.translatesAutoresizingMaskIntoConstraints = useAutoResizingMask
     }
     
     public func addArrangedSubviews(_ views: [UIView]) {
