@@ -28,6 +28,7 @@ extension UIButton {
         self.translatesAutoresizingMaskIntoConstraints = useAutoResizingMask
     }
     
+    
     public convenience init(type: UIButton.ButtonType = .system,
                             titleForState: [String: UIControl.State],
                             font: UIFont = .systemFont(ofSize: 17),
