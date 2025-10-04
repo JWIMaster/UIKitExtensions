@@ -10,12 +10,43 @@ import UIKit
 
 
 extension UIButton {
-    public convenience init(type: UIButton.ButtonType = .system, text: String, font: UIFont = .systemFont(ofSize: 17), disableAutoResizingMask: Bool = false) {
+    public convenience init(type: UIButton.ButtonType = .system,
+                            title: String,
+                            forState state: UIControl.State = .normal,
+                            font: UIFont = .systemFont(ofSize: 17),
+                            titleColor: UIColor = .black,
+                            useAutoResizingMask: Bool = false
+    ) {
         self.init(type: type)
-        self.setTitle(text, for: .normal)
+        
+        self.setTitle(title, for: state)
+        
         self.titleLabel?.font = font
-        self.translatesAutoresizingMaskIntoConstraints = !disableAutoResizingMask
+        
+        self.setTitleColor(titleColor, for: .normal)
+        
+        self.translatesAutoresizingMaskIntoConstraints = useAutoResizingMask
+    }
+    
+    public convenience init(type: UIButton.ButtonType = .system,
+                            titleForState: [String: UIControl.State],
+                            font: UIFont = .systemFont(ofSize: 17),
+                            titleColorForState: [UIColor: UIControl.State],
+                            useAutoResizingMask: Bool = false
+    ) {
+        self.init(type: type)
+        
+        for (title, state) in titleForState {
+            self.setTitle(title, for: state)
+        }
+        
+        self.titleLabel?.font = font
+        
+        for (titleColor, state) in titleColorForState {
+            self.setTitleColor(titleColor, for: state)
+        }
+        
+        self.translatesAutoresizingMaskIntoConstraints = useAutoResizingMask
     }
 }
-
 
