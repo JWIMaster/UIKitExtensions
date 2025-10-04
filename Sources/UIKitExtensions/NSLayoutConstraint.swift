@@ -2,7 +2,7 @@ import UIKit
 import UIKitCompatKit
 
 extension UIView {
-    public func pinToEdges(of view: UIView, insetBy insets: UIEdgeInsets = .zero) -> [NSLayoutConstraint] {
+    public func pinToEdges(of view: UIView, insetBy insets: UIEdgeInsets = .zero) {
         guard let parent = superview else {
             fatalError()
         }
@@ -15,7 +15,6 @@ extension UIView {
         ]
         
         NSLayoutConstraint.activate(constraints)
-        return constraints
     }
 }
 
