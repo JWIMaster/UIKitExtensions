@@ -14,7 +14,7 @@ extension UIButton {
                             title: String,
                             forState state: UIControl.State = .normal,
                             font: UIFont = .systemFont(ofSize: 17),
-                            titleColor: UIColor = .blue,
+                            titleColor: UIColor = .systemBlue,
                             useAutoResizingMask: Bool = true
     ) {
         self.init(type: type)
