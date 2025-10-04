@@ -28,6 +28,24 @@ extension UIButton {
         self.translatesAutoresizingMaskIntoConstraints = useAutoResizingMask
     }
     
+    //MARK: Here because systemBlue doesn't exist on iOS 6, but you might still want iOS 6 buttons
+    public convenience init(type: UIButton.ButtonType = .system,
+                            title: String,
+                            forState state: UIControl.State = .normal,
+                            font: UIFont = .systemFont(ofSize: 17),
+                            useAutoResizingMask: Bool = true
+    ) {
+        self.init(type: type)
+        
+        self.setTitle(title, for: state)
+        
+        self.titleLabel?.font = font
+        
+        self.translatesAutoresizingMaskIntoConstraints = useAutoResizingMask
+    }
+    
+    
+    
     
     public convenience init(type: UIButton.ButtonType = .system,
                             titleForState: [String: UIControl.State],
