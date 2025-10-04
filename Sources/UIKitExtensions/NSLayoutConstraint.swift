@@ -1,8 +1,5 @@
 import UIKit
-
-#if IOS_7
 import UIKitCompatKit
-#endif
 
 extension UIView {
     public func pinToEdges(of view: UIView, insetBy insets: UIEdgeInsets = .zero) {
