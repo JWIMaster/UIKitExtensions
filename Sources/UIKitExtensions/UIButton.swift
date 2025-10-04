@@ -10,7 +10,7 @@ import UIKit
 
 
 extension UIButton {
-    convenience init(type: UIButton.ButtonType = .system, text: String, font: UIFont = .systemFont(ofSize: 17)) {
+    public convenience init(type: UIButton.ButtonType = .system, text: String, font: UIFont = .systemFont(ofSize: 17)) {
         self.init(type: type)
         self.setTitle(text, for: .normal)
         self.titleLabel?.font = font
