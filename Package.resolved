@@ -1,0 +1,14 @@
+{
+  "pins" : [
+    {
+      "identity" : "uikitcompatkit",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/JWIMaster/UIKitCompatKit",
+      "state" : {
+        "branch" : "master",
+        "revision" : "5387d6caffc21f35c9d377d32b420b4ed69847e1"
+      }
+    }
+  ],
+  "version" : 2
+}
