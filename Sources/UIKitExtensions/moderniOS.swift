@@ -20,9 +20,8 @@ extension UINavigationController {
 
 extension UIView {
     public func moderniOSStatusBar(backgroundColor: UIColor = .white) {
-        let statusBarHeight = UIApplication.shared.statusBarFrame.height
         
-        let statusBar = UIView(frame: CGRect(x: 0, y: 0, width: self.bounds.width, height: statusBarHeight))
+        let statusBar = UIView(frame: CGRect(x: 0, y: 0, width: self.bounds.width, height: 20))
         statusBar.backgroundColor = .black
         statusBar.autoresizingMask = [.flexibleWidth, .flexibleBottomMargin]
         
