@@ -36,10 +36,13 @@ extension UIView {
         statusBarBackground.backgroundColor = backgroundColor
         statusBarBackground.autoresizingMask = [.flexibleWidth, .flexibleBottomMargin]
         statusBarBackground.isUserInteractionEnabled = false
+        
         let statusBarTextContainer = UIStackView()
+        statusBarTextContainer.frame = statusBarBackground.frame
         statusBarTextContainer.axis = .horizontal
         statusBarTextContainer.alignment = .center
         statusBarTextContainer.distribution = .fillEqually
+        statusBarTextContainer.translatesAutoresizingMaskIntoConstraints = false
         
         let a = UILabel()
         a.text = "1"
@@ -48,6 +51,11 @@ extension UIView {
         statusBarTextContainer.addArrangedSubview(a)
         statusBarBackground.addSubview(statusBarTextContainer)
         statusBarBackground.bringSubviewToFront(statusBarTextContainer)
+        
+        NSLayoutConstraint.activate([
+            statusBarTextContainer.centerXAnchor.constraint(equalTo: statusBarTextContainer.centerXAnchor),
+            statusBarTextContainer.centerYAnchor.constraint(equalTo: statusBarTextContainer.centerYAnchor)
+        ])
 
         self.addSubview(statusBarBackground)
         self.bringSubviewToFront(statusBarBackground)
