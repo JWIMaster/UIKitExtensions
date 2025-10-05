@@ -31,7 +31,6 @@ extension UIView {
         
         let a = UILabel()
         a.text = "1"
-        a.translatesAutoresizingMaskIntoConstraints = false
         a.textColor = .black
         a.backgroundColor = UIColor.green.withAlphaComponent(0.2)
         statusBarTextContainer.addArrangedSubview(a)
