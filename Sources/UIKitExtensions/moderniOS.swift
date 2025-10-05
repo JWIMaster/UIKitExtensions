@@ -32,7 +32,7 @@ extension UIView {
         let a = UILabel()
         a.text = "1"
         a.textColor = .black
-        a.backgroundColor = UIColor.green.withAlphaComponent(0.2)
+        a.backgroundColor = .clear
         modernStatusBar.addArrangedSubview(a)
         
         modernStatusBar.pinToEdges(of: UIView(frame: UIApplication.shared.statusBarFrame))
