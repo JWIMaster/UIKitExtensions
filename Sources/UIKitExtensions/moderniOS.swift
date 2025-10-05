@@ -44,6 +44,9 @@ extension UIView {
             
             statusBar.addSubview(timeLabel)
             
+            timeLabel.centerXAnchor.constraint(equalTo: statusBar.centerXAnchor).isActive = true
+            timeLabel.centerYAnchor.constraint(equalTo: statusBar.centerYAnchor).isActive = true
+            
             
             self.addSubview(statusBar)
             self.bringSubviewToFront(statusBar)
