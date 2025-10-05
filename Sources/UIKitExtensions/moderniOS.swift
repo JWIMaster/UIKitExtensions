@@ -21,8 +21,9 @@ extension UINavigationController {
 extension UIView {
     public func moderniOSStatusBar(backgroundColor: UIColor = .blue) {
         
-        let statusBarTextContainer = UIStackView()
-        statusBarTextContainer.frame = UIApplication.shared.statusBarFrame
+        let ab = UIView(frame: UIApplication.shared.statusBarFrame)
+        
+        let statusBarTextContainer = UIStackView(frame: ab)
         statusBarTextContainer.backgroundColor = UIColor.red.withAlphaComponent(0.4)
         statusBarTextContainer.axis = .horizontal
         statusBarTextContainer.alignment = .center
