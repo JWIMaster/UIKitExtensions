@@ -24,11 +24,11 @@ extension UIView {
         let ab = UIView(frame: UIApplication.shared.statusBarFrame)
         
         let statusBarTextContainer = UIStackView(frame: ab.frame)
-        statusBarTextContainer.backgroundColor = UIColor.red.withAlphaComponent(0.4)
+        statusBarTextContainer.backgroundColor = .red
         statusBarTextContainer.axis = .horizontal
         statusBarTextContainer.alignment = .center
         statusBarTextContainer.distribution = .fillEqually
-        statusBarTextContainer.autoresizingMask = [.flexibleWidth, .flexibleBottomMargin]
+        statusBarTextContainer.translatesAutoresizingMaskIntoConstraints = false
         
         let a = UILabel()
         a.text = "1"
