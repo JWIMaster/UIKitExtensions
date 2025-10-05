@@ -32,7 +32,7 @@ extension UIView {
             timeLabel.textColor = .black
             timeLabel.backgroundColor = .clear
             if #unavailable(iOS 20) {
-                timeLabel.font = UIFont.systemFont(ofSize: 12, weight: .bold)
+                timeLabel.font = UIFont.systemFont(ofSize: 12.5, weight: .bold)
             }
             timeLabel.translatesAutoresizingMaskIntoConstraints = false
             
