@@ -20,7 +20,8 @@ extension UINavigationController {
 
 extension UIView {
     public func moderniOSStatusBar(backgroundColor: UIColor = .black) {
-        let modernStatusBar = UIView(frame: UIApplication.shared.statusBarFrame)
+        let statusBarFrame: CGRect = UIApplication.shared.statusBarFrame
+        let modernStatusBar = UIView(frame: statusBarFrame)
         modernStatusBar.backgroundColor = backgroundColor
         modernStatusBar.autoresizingMask = [.flexibleWidth, .flexibleBottomMargin]
         self.addSubview(modernStatusBar)
