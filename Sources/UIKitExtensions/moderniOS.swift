@@ -20,15 +20,27 @@ extension UINavigationController {
 
 extension UIView {
     public func moderniOSStatusBar(backgroundColor: UIColor = .black) {
-        let statusBarFrame = UIApplication.shared.statusBarFrame
-        
-        let statusBarBackground = UIView(frame: statusBarFrame)
-        statusBarBackground.backgroundColor = backgroundColor
-        statusBarBackground.autoresizingMask = [.flexibleWidth, .flexibleBottomMargin]
-        statusBarBackground.isUserInteractionEnabled = false
+        let statusBarFrame: CGRect
+                if #available(iOS 13.0, *) {
+                    if let windowScene = self.window?.windowScene,
+                       let frame = windowScene.statusBarManager?.statusBarFrame {
+                        statusBarFrame = frame
+                    } else {
+                        statusBarFrame = CGRect(x: 0, y: 0, width: self.bounds.width, height: 20)
+                    }
+                } else {
+                    statusBarFrame = UIApplication.shared.statusBarFrame
+                }
 
-        self.addSubview(statusBarBackground)
-        self.bringSubviewToFront(statusBarBackground)
+                // Create status bar background view
+                let statusBarBackground = UIView(frame: statusBarFrame)
+                statusBarBackground.backgroundColor = backgroundColor
+                statusBarBackground.autoresizingMask = [.flexibleWidth, .flexibleBottomMargin]
+                statusBarBackground.isUserInteractionEnabled = false
+
+                // Add it on top of current view
+                self.addSubview(statusBarBackground)
+                self.bringSubviewToFront(statusBarBackground)
     }
 }
 
