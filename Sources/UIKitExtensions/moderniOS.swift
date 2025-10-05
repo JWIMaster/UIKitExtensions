@@ -19,7 +19,7 @@ extension UINavigationController {
 }
 
 extension UIView {
-    public func moderniOSStatusBar(backgroundColor: UIColor = .white) {
+    public func moderniOSStatusBar(backgroundColor: UIColor = .blue) {
         if #available(iOS 50, *) {
             return
         } else {
