@@ -27,7 +27,7 @@ extension UIView {
         statusBarBackground.isUserInteractionEnabled = false
         
         let statusBarTextContainer = UIStackView()
-        statusBarTextContainer.frame = statusBarBackground.frame
+        statusBarTextContainer.frame = UIApplication.shared.statusBarFrame
         statusBarTextContainer.backgroundColor = UIColor.red.withAlphaComponent(0.4)
         statusBarTextContainer.axis = .horizontal
         statusBarTextContainer.alignment = .center
@@ -40,16 +40,16 @@ extension UIView {
         a.textColor = .black
         a.backgroundColor = UIColor.green.withAlphaComponent(0.2)
         statusBarTextContainer.addArrangedSubview(a)
-        statusBarBackground.addSubview(statusBarTextContainer)
-        statusBarBackground.bringSubviewToFront(statusBarTextContainer)
+        //statusBarBackground.addSubview(statusBarTextContainer)
+        //statusBarBackground.bringSubviewToFront(statusBarTextContainer)
         
         NSLayoutConstraint.activate([
             statusBarTextContainer.centerXAnchor.constraint(equalTo: statusBarTextContainer.centerXAnchor),
             statusBarTextContainer.centerYAnchor.constraint(equalTo: statusBarTextContainer.centerYAnchor)
         ])
 
-        self.addSubview(statusBarBackground)
-        self.bringSubviewToFront(statusBarBackground)
+        self.addSubview(statusBarTextContainer)
+        self.bringSubviewToFront(statusBarTextContainer)
     }
 }
 
