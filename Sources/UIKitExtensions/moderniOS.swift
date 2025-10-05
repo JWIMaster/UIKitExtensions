@@ -42,11 +42,6 @@ extension UIView {
         statusBarTextContainer.addArrangedSubview(a)
         //statusBarBackground.addSubview(statusBarTextContainer)
         //statusBarBackground.bringSubviewToFront(statusBarTextContainer)
-        
-        NSLayoutConstraint.activate([
-            statusBarTextContainer.centerXAnchor.constraint(equalTo: statusBarTextContainer.centerXAnchor),
-            statusBarTextContainer.centerYAnchor.constraint(equalTo: statusBarTextContainer.centerYAnchor)
-        ])
 
         self.addSubview(statusBarTextContainer)
         self.bringSubviewToFront(statusBarTextContainer)
