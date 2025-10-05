@@ -31,7 +31,7 @@ extension UIView {
             timeLabel.textAlignment = .center
             timeLabel.textColor = .black
             timeLabel.backgroundColor = .clear
-            timeLabel.font = UIFont.systemFont(ofSize: 14)
+            timeLabel.font = UIFont.systemFont(ofSize: 13)
             timeLabel.translatesAutoresizingMaskIntoConstraints = false
             
             let timeFormatter = DateFormatter()
