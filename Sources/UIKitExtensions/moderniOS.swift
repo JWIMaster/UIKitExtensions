@@ -43,6 +43,8 @@ extension UIView {
         
         let a = UILabel()
         a.text = "1"
+        a.translatesAutoresizingMaskIntoConstraints = false
+        a.textColor = .black
         statusBarTextContainer.addArrangedSubview(a)
         statusBarBackground.addSubview(statusBarTextContainer)
         statusBarBackground.bringSubviewToFront(statusBarTextContainer)
