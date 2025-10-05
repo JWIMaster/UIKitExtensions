@@ -20,7 +20,7 @@ extension UINavigationController {
 
 extension UIView {
     public func moderniOSStatusBar(backgroundColor: UIColor = .white) {
-        if #available(iOS 7, *) {
+        if #available(iOS 50, *) {
             return
         } else {
             let statusBar = UIView(frame: CGRect(x: 0, y: 0, width: self.bounds.width, height: 20))
