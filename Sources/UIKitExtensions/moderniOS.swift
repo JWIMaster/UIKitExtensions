@@ -20,23 +20,9 @@ extension UINavigationController {
 
 extension UIView {
     public func moderniOSStatusBar(backgroundColor: UIColor = .black) {
-        
-        
-        let modernStatusBar = UIStackView()
+        let modernStatusBar = UIView(frame: UIApplication.shared.statusBarFrame)
         modernStatusBar.backgroundColor = backgroundColor
-        modernStatusBar.axis = .horizontal
-        modernStatusBar.alignment = .center
-        modernStatusBar.distribution = .fillEqually
-        modernStatusBar.translatesAutoresizingMaskIntoConstraints = false
-        
-        let a = UILabel()
-        a.text = "1"
-        a.textColor = .black
-        a.backgroundColor = .clear
-        modernStatusBar.addArrangedSubview(a)
-        
-        modernStatusBar.pinToEdges(of: UIView(frame: UIApplication.shared.statusBarFrame))
-        
+        modernStatusBar.autoresizingMask = [.flexibleWidth, .flexibleBottomMargin]
         self.addSubview(modernStatusBar)
         self.bringSubviewToFront(modernStatusBar)
     }
