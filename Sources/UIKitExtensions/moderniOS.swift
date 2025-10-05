@@ -23,7 +23,7 @@ extension UIView {
         
         let ab = UIView(frame: UIApplication.shared.statusBarFrame)
         
-        let statusBarTextContainer = UIStackView(frame: ab)
+        let statusBarTextContainer = UIStackView(frame: ab.frame)
         statusBarTextContainer.backgroundColor = UIColor.red.withAlphaComponent(0.4)
         statusBarTextContainer.axis = .horizontal
         statusBarTextContainer.alignment = .center
