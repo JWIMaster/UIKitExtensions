@@ -11,18 +11,18 @@ import UIKitCompatKit
 
 extension UINavigationController {
     public func moderniOSNavBar() {
-        self.navigationBar.backgroundColor = .white
-        self.navigationBar.setBackgroundImage(UIImage(), for: .default)
-        self.navigationBar.shadowImage = UIImage()
-        self.navigationBar.tintColor = .white
+        if #unavailable(iOS 7.0.1) {
+            self.navigationBar.backgroundColor = .white
+            self.navigationBar.setBackgroundImage(UIImage(), for: .default)
+            self.navigationBar.shadowImage = UIImage()
+            self.navigationBar.tintColor = .white
+        }
     }
 }
 
 extension UIWindow {
     public func moderniOSStatusBar(backgroundColor: UIColor = .white) {
-        if #available(iOS 50, *) {
-            return
-        } else {
+        if #unavailable(iOS 7.0.1) {
             let statusBar = UIView(frame: CGRect(x: 0, y: 0, width: self.bounds.width, height: 20))
             statusBar.backgroundColor = backgroundColor
             statusBar.autoresizingMask = [.flexibleWidth, .flexibleBottomMargin]
@@ -31,9 +31,7 @@ extension UIWindow {
             timeLabel.textAlignment = .center
             timeLabel.textColor = .black
             timeLabel.backgroundColor = .clear
-            if #unavailable(iOS 20) {
-                timeLabel.font = UIFont.systemFont(ofSize: 12.5, weight: .bold)
-            }
+            timeLabel.font = UIFont.systemFont(ofSize: 12.5, weight: .bold)
             timeLabel.translatesAutoresizingMaskIntoConstraints = false
             
             let timeFormatter = DateFormatter()
