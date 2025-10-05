@@ -20,47 +20,12 @@ extension UINavigationController {
 
 extension UIView {
     public func moderniOSStatusBar(backgroundColor: UIColor = .blue) {
-        let statusBarFrame: CGRect
-        if #available(iOS 13.0, *) {
-            if let windowScene = self.window?.windowScene,
-               let frame = windowScene.statusBarManager?.statusBarFrame {
-                statusBarFrame = frame
-            } else {
-                statusBarFrame = CGRect(x: 0, y: 0, width: self.bounds.width, height: UIApplication.shared.statusBarFrame.height)
-            }
-        } else {
-            statusBarFrame = UIApplication.shared.statusBarFrame
-        }
-
-        let statusBarBackground = UIView(frame: statusBarFrame)
-        statusBarBackground.backgroundColor = backgroundColor
-        statusBarBackground.autoresizingMask = [.flexibleWidth, .flexibleBottomMargin]
-        statusBarBackground.isUserInteractionEnabled = false
+        let modernStatusBar = UIStackView()
+        modernStatusBar.frame = UIApplication.shared.statusBarFrame
+        modernStatusBar.backgroundColor = .blue
         
-        let statusBarTextContainer = UIStackView()
-        statusBarTextContainer.frame = statusBarBackground.frame
-        statusBarTextContainer.backgroundColor = UIColor.red.withAlphaComponent(0.4)
-        statusBarTextContainer.axis = .horizontal
-        statusBarTextContainer.alignment = .center
-        statusBarTextContainer.distribution = .fillEqually
-        statusBarTextContainer.translatesAutoresizingMaskIntoConstraints = false
-        
-        let a = UILabel()
-        a.text = "1"
-        a.translatesAutoresizingMaskIntoConstraints = false
-        a.textColor = .black
-        a.backgroundColor = UIColor.green.withAlphaComponent(0.2)
-        statusBarTextContainer.addArrangedSubview(a)
-        statusBarBackground.addSubview(statusBarTextContainer)
-        statusBarBackground.bringSubviewToFront(statusBarTextContainer)
-        
-        NSLayoutConstraint.activate([
-            statusBarTextContainer.centerXAnchor.constraint(equalTo: statusBarTextContainer.centerXAnchor),
-            statusBarTextContainer.centerYAnchor.constraint(equalTo: statusBarTextContainer.centerYAnchor)
-        ])
-
-        self.addSubview(statusBarBackground)
-        self.bringSubviewToFront(statusBarBackground)
+        self.addSubview(modernStatusBar)
+        self.bringSubviewToFront(modernStatusBar)
     }
 }
 
