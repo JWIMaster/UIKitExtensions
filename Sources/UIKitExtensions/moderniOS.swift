@@ -7,7 +7,7 @@
 
 import Foundation
 import UIKit
-
+import UIKitCompatKit
 
 extension UINavigationController {
     public func moderniOS() {
@@ -36,6 +36,16 @@ extension UIView {
         statusBarBackground.backgroundColor = backgroundColor
         statusBarBackground.autoresizingMask = [.flexibleWidth, .flexibleBottomMargin]
         statusBarBackground.isUserInteractionEnabled = false
+        let statusBarTextContainer = UIStackView()
+        statusBarTextContainer.axis = .horizontal
+        statusBarTextContainer.alignment = .center
+        statusBarTextContainer.distribution = .fillEqually
+        
+        let a = UILabel()
+        a.text = "1"
+        statusBarTextContainer.addArrangedSubview(a)
+        statusBarBackground.addSubview(statusBarTextContainer)
+        statusBarBackground.bringSubviewToFront(statusBarTextContainer)
 
         self.addSubview(statusBarBackground)
         self.bringSubviewToFront(statusBarBackground)
