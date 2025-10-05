@@ -27,6 +27,21 @@ extension UIView {
             statusBar.backgroundColor = backgroundColor
             statusBar.autoresizingMask = [.flexibleWidth, .flexibleBottomMargin]
             
+            let timeLabel = UILabel()
+            timeLabel.textAlignment = .center
+            timeLabel.textColor = .black
+            timeLabel.font = UIFont.systemFont(ofSize: 12)
+            
+            let timeFormatter = DateFormatter()
+            timeFormatter.dateFormat = "h:mm a"
+            
+            Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { _ in
+                timeLabel.text = timeFormatter.string(from: Date())
+            }
+            
+            statusBar.addSubview(timeLabel)
+            
+            
             self.addSubview(statusBar)
             self.bringSubviewToFront(statusBar)
         }
@@ -47,7 +62,7 @@ extension UIWindow {
         statusBarBackground.backgroundColor = backgroundColor
         statusBarBackground.autoresizingMask = [.flexibleWidth, .flexibleBottomMargin]
         statusBarBackground.isUserInteractionEnabled = false
-
+        
         self.addSubview(statusBarBackground)
         self.bringSubviewToFront(statusBarBackground)
     }
