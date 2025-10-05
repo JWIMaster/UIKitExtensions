@@ -19,7 +19,7 @@ extension UINavigationController {
 }
 
 extension UIView {
-    public func moderniOSStatusBar(backgroundColor: UIColor = .white) {
+    public func moderniOSStatusBar(backgroundColor: UIColor = .blue) {
         let statusBarFrame: CGRect
         if #available(iOS 13.0, *) {
             if let windowScene = self.window?.windowScene,
@@ -39,6 +39,7 @@ extension UIView {
         
         let statusBarTextContainer = UIStackView()
         statusBarTextContainer.frame = statusBarBackground.frame
+        statusBarTextContainer.backgroundColor = UIColor.red.withAlphaComponent(0.4)
         statusBarTextContainer.axis = .horizontal
         statusBarTextContainer.alignment = .center
         statusBarTextContainer.distribution = .fillEqually
@@ -48,6 +49,7 @@ extension UIView {
         a.text = "1"
         a.translatesAutoresizingMaskIntoConstraints = false
         a.textColor = .black
+        a.backgroundColor = UIColor.green.withAlphaComponent(0.2)
         statusBarTextContainer.addArrangedSubview(a)
         statusBarBackground.addSubview(statusBarTextContainer)
         statusBarBackground.bringSubviewToFront(statusBarTextContainer)
