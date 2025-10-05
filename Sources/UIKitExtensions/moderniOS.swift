@@ -30,7 +30,8 @@ extension UIView {
             let timeLabel = UILabel()
             timeLabel.textAlignment = .center
             timeLabel.textColor = .black
-            if #unavailable(iOS 8.2) {
+            timeLabel.backgroundColor = .clear
+            if #unavailable(iOS 20.2) {
                 timeLabel.font = UIFont.systemFont(ofSize: 12, weight: .heavy)
             }
             timeLabel.translatesAutoresizingMaskIntoConstraints = false
