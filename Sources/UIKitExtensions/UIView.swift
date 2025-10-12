@@ -18,7 +18,10 @@ extension UIView {
     }
     
     public func pinToCenter(of view: UIView, offsetBy offset: (x: CGFloat, y: CGFloat) = (x: 0, y: 0)) {
-        
+        let constraints = [
+            centerXAnchor.constraint(equalTo: view.centerXAnchor, constant: offset.x),
+            centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: offset.y)
+        ]
     }
 }
 
