@@ -8,13 +8,17 @@ extension UIView {
         }
         
         let constraints = [
-            topAnchor.constraint(equalTo: parent.topAnchor, constant: insets.top),
-            leadingAnchor.constraint(equalTo: parent.leadingAnchor, constant: insets.left),
-            trailingAnchor.constraint(equalTo: parent.trailingAnchor, constant: -insets.right),
-            bottomAnchor.constraint(equalTo: parent.bottomAnchor, constant: -insets.bottom)
+            topAnchor.constraint(equalTo: view.topAnchor, constant: insets.top),
+            leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: insets.left),
+            trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -insets.right),
+            bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -insets.bottom)
         ]
         
         NSLayoutConstraint.activate(constraints)
+    }
+    
+    public func pinToCenter(of view: UIView, offsetBy offset: (x: CGFloat, y: CGFloat) = (x: 0, y: 0)) {
+        
     }
 }
 
