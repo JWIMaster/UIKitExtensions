@@ -22,6 +22,8 @@ extension UIView {
             centerXAnchor.constraint(equalTo: view.centerXAnchor, constant: offset.x),
             centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: offset.y)
         ]
+        
+        NSLayoutConstraint.activate(constraints)
     }
 }
 
