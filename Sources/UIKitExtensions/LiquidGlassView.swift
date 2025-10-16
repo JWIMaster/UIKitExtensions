@@ -70,7 +70,7 @@ public class LiquidGlassView: UIKitCompatKit.UIVisualEffectView {
         updateShadow()
 
         // Subtle bluish tint overlay
-        tintOverlay.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.05).cgColor
+        tintOverlay.backgroundColor = UIColor.blue.withAlphaComponent(0.05).cgColor
         tintOverlay.cornerRadius = cornerRadius
         tintOverlay.compositingFilter = "overlayBlendMode"
         //layer.addSublayer(tintOverlay)
