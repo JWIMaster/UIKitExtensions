@@ -1,12 +1,21 @@
 {
   "pins" : [
     {
+      "identity" : "gpuimage1swift",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/JWIMaster/GPUImage1Swift.git",
+      "state" : {
+        "branch" : "master",
+        "revision" : "4a936d991f248bb18373aba4c326055b04f3e566"
+      }
+    },
+    {
       "identity" : "uikitcompatkit",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/JWIMaster/UIKitCompatKit",
       "state" : {
         "branch" : "master",
-        "revision" : "5387d6caffc21f35c9d377d32b420b4ed69847e1"
+        "revision" : "6bc2744cf413473d9b9029f44fd8c6ff5cba6af2"
       }
     }
   ],
