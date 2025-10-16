@@ -1,207 +1,66 @@
-//
-//  LiquidGlassView.swift
-//
-//  Created by JWI on 16/10/2025.
-//
-
-import Foundation
 import UIKit
+import LiveFrost
 import UIKitCompatKit
 import GPUImage1Swift
-import LiveFrost
 
+public func createLiquidGlass(frame: CGRect, blurRadius: CGFloat, cornerRadius: CGFloat) -> LFGlassView {
+    let glass = LFGlassView()
+    glass.frame = frame
+    glass.blurRadius = blurRadius
+    glass.scaleFactor = 1
+    glass.layer.cornerRadius = cornerRadius
+    glass.layer.masksToBounds = true
+    glass.isUserInteractionEnabled = true
 
-public class LiquidGlassView: UIView {
+    // Shadow
+    glass.layer.shadowColor = UIColor.black.cgColor
+    glass.layer.shadowOpacity = 0.5
+    glass.layer.shadowRadius = 20
+    glass.layer.shadowOffset = CGSize(width: 0, height: 10)
 
-    // MARK: - Public properties
-    public var cornerRadius: CGFloat = 50 {
-        didSet {
-            layer.cornerRadius = cornerRadius
-            updateMaskPath()
-            updateShadow()
-            updateLayerCorners()
-        }
-    }
+    // Tint overlay
+    let tintOverlay = CALayer()
+    tintOverlay.frame = glass.bounds
+    tintOverlay.backgroundColor = UIColor.blue.withAlphaComponent(0.05).cgColor
+    tintOverlay.cornerRadius = cornerRadius
+    glass.layer.addSublayer(tintOverlay)
 
-    public var shadowOpacity: Float = 0.6 {
-        didSet { updateShadow() }
-    }
+    // Corner highlight
+    let cornerHighlightLayer = CAGradientLayer()
+    cornerHighlightLayer.frame = glass.bounds
+    cornerHighlightLayer.colors = [
+        UIColor.white.withAlphaComponent(0.25).cgColor,
+        UIColor.clear.cgColor,
+        UIColor.white.withAlphaComponent(0.2).cgColor,
+        UIColor.white.withAlphaComponent(0.1).cgColor
+    ]
+    cornerHighlightLayer.locations = [0, 0.25, 0.9, 1]
+    cornerHighlightLayer.startPoint = CGPoint(x: 0, y: 0)
+    cornerHighlightLayer.endPoint = CGPoint(x: 1, y: 1)
+    cornerHighlightLayer.compositingFilter = "screenBlendMode"
+    glass.layer.addSublayer(cornerHighlightLayer)
 
-    public var shadowRadius: CGFloat = 30 {
-        didSet { updateShadow() }
-    }
+    // Inner depth gradient
+    let innerDepthLayer = CAGradientLayer()
+    innerDepthLayer.frame = glass.bounds.insetBy(dx: 1, dy: 1)
+    innerDepthLayer.colors = [
+        UIColor.black.withAlphaComponent(0.15).cgColor,
+        UIColor.clear.cgColor,
+        UIColor.white.withAlphaComponent(0.05).cgColor
+    ]
+    innerDepthLayer.locations = [0, 0.6, 1]
+    innerDepthLayer.startPoint = CGPoint(x: 0.5, y: 1)
+    innerDepthLayer.endPoint = CGPoint(x: 0.5, y: 0)
+    innerDepthLayer.compositingFilter = "softLightBlendMode"
+    glass.layer.addSublayer(innerDepthLayer)
 
-    public var shadowOffset: CGSize = CGSize(width: 0, height: 25) {
-        didSet { updateShadow() }
-    }
+    // Outer rim
+    let rimLayer = CALayer()
+    rimLayer.frame = glass.bounds
+    rimLayer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
+    rimLayer.borderWidth = 0.8
+    rimLayer.cornerRadius = cornerRadius
+    glass.layer.addSublayer(rimLayer)
 
-    public var saturationBoost: CGFloat = 1.1 {
-        didSet { applySaturationBoost() }
-    }
-
-    public var blurRadius: CGFloat = 12 {
-        didSet { liquidGlass.blurRadius = blurRadius }
-    }
-
-    public var scaleFactor: CGFloat = 1 {
-        didSet { liquidGlass.scaleFactor = scaleFactor }
-    }
-
-    // MARK: - Private layers
-    private let liquidGlass = LFGlassView()
-    private let tintOverlay = CALayer()
-    private let cornerHighlightLayer = CAGradientLayer()
-    private let darkenFalloffLayer = CAGradientLayer()
-    private let innerDepthLayer = CAGradientLayer()
-    private let refractLayer = CAGradientLayer()
-    private let rimLayer = CALayer()
-    private let diffractionLayer = CALayer()
-
-    private var saturationFilter: GPUImageSaturationFilter?
-
-    // MARK: - Init
-    public init(blurRadius: CGFloat = 12, cornerRadius: CGFloat = 50) {
-        super.init(frame: .zero)
-        self.cornerRadius = cornerRadius
-        self.blurRadius = blurRadius
-        setupLayers()
-        applySaturationBoost()
-    }
-
-    required init?(coder: NSCoder) {
-        super.init(coder: coder)
-        setupLayers()
-        applySaturationBoost()
-    }
-
-    // MARK: - Setup
-    private func setupLayers() {
-        clipsToBounds = true
-        layer.cornerRadius = cornerRadius
-        layer.masksToBounds = false
-        updateShadow()
-
-        // LFGlassView as background
-        liquidGlass.frame = bounds
-        liquidGlass.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-        liquidGlass.blurRadius = blurRadius
-        liquidGlass.scaleFactor = scaleFactor
-        liquidGlass.isUserInteractionEnabled = false
-        liquidGlass.layer.cornerRadius = cornerRadius
-        //liquidGlass.layer.masksToBounds = true
-        liquidGlass.isLiveBlurring = true
-        addSubview(liquidGlass)
-
-        // Subtle bluish tint overlay
-        tintOverlay.backgroundColor = UIColor.blue.withAlphaComponent(0.05).cgColor
-        tintOverlay.cornerRadius = cornerRadius
-        tintOverlay.compositingFilter = "overlayBlendMode"
-        layer.addSublayer(tintOverlay)
-
-        // Soft darken towards edges (depth)
-        darkenFalloffLayer.colors = [
-            UIColor.black.withAlphaComponent(0.22).cgColor,
-            UIColor.clear.cgColor
-        ]
-        darkenFalloffLayer.startPoint = CGPoint(x: 0.5, y: 1)
-        darkenFalloffLayer.endPoint = CGPoint(x: 0.5, y: 0)
-        darkenFalloffLayer.locations = [0, 1]
-        darkenFalloffLayer.compositingFilter = "multiplyBlendMode"
-        layer.addSublayer(darkenFalloffLayer)
-
-        // Subtle whitening in top-left and bottom-right corners
-        cornerHighlightLayer.colors = [
-            UIColor.white.withAlphaComponent(0.25).cgColor,
-            UIColor.clear.cgColor,
-            UIColor.white.withAlphaComponent(0.2).cgColor,
-            UIColor.white.withAlphaComponent(0.1).cgColor
-        ]
-        cornerHighlightLayer.locations = [0.0, 0.25, 0.9, 1.0]
-        cornerHighlightLayer.startPoint = CGPoint(x: 0, y: 0)
-        cornerHighlightLayer.endPoint = CGPoint(x: 1, y: 1)
-        cornerHighlightLayer.compositingFilter = "screenBlendMode"
-        layer.addSublayer(cornerHighlightLayer)
-
-        // Inner depth gradient
-        innerDepthLayer.colors = [
-            UIColor.black.withAlphaComponent(0.15).cgColor,
-            UIColor.clear.cgColor,
-            UIColor.white.withAlphaComponent(0.05).cgColor
-        ]
-        innerDepthLayer.locations = [0.0, 0.6, 1.0]
-        innerDepthLayer.startPoint = CGPoint(x: 0.5, y: 1)
-        innerDepthLayer.endPoint = CGPoint(x: 0.5, y: 0)
-        innerDepthLayer.compositingFilter = "softLightBlendMode"
-        layer.addSublayer(innerDepthLayer)
-
-        // Refractive rim
-        refractLayer.colors = [
-            UIColor.white.withAlphaComponent(0.05).cgColor,
-            UIColor.clear.cgColor,
-            UIColor.white.withAlphaComponent(0.05).cgColor
-        ]
-        refractLayer.locations = [0.0, 0.1, 1.0]
-        refractLayer.startPoint = CGPoint(x: 0, y: 0)
-        refractLayer.endPoint = CGPoint(x: 1, y: 1)
-        refractLayer.compositingFilter = "differenceBlendMode"
-        layer.addSublayer(refractLayer)
-
-        // Outer rim
-        rimLayer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
-        rimLayer.borderWidth = 0.8
-        rimLayer.cornerRadius = cornerRadius
-        layer.addSublayer(rimLayer)
-
-        // Diffraction / micro refraction
-        diffractionLayer.backgroundColor = UIColor.white.withAlphaComponent(0.03).cgColor
-        diffractionLayer.cornerRadius = cornerRadius - 1
-        diffractionLayer.compositingFilter = "differenceBlendMode"
-        layer.addSublayer(diffractionLayer)
-    }
-
-    // MARK: - Layout
-    public override func layoutSubviews() {
-        super.layoutSubviews()
-        liquidGlass.frame = bounds
-        layoutLayers()
-    }
-
-    private func layoutLayers() {
-        let inset: CGFloat = 2
-        tintOverlay.frame = bounds
-        darkenFalloffLayer.frame = bounds
-        cornerHighlightLayer.frame = bounds
-        innerDepthLayer.frame = bounds.insetBy(dx: inset * 0.5, dy: inset * 0.5)
-        refractLayer.frame = bounds.insetBy(dx: bounds.width * 0.05, dy: bounds.height * 0.05)
-        rimLayer.frame = bounds
-        diffractionLayer.frame = bounds.insetBy(dx: inset, dy: inset)
-        updateMaskPath()
-    }
-
-    private func updateMaskPath() {
-        let mask = CAShapeLayer()
-        mask.path = UIBezierPath(roundedRect: bounds, cornerRadius: cornerRadius).cgPath
-        layer.mask = mask
-    }
-
-    private func updateLayerCorners() {
-        liquidGlass.layer.cornerRadius = cornerRadius
-        tintOverlay.cornerRadius = cornerRadius
-        rimLayer.cornerRadius = cornerRadius
-        diffractionLayer.cornerRadius = cornerRadius - 1
-    }
-
-    private func updateShadow() {
-        layer.shadowColor = UIColor.black.cgColor
-        layer.shadowOpacity = shadowOpacity
-        layer.shadowRadius = shadowRadius
-        layer.shadowOffset = shadowOffset
-    }
-
-    private func applySaturationBoost() {
-        #if canImport(GPUImage1Swift)
-        saturationFilter = GPUImageSaturationFilter()
-        saturationFilter?.saturation = saturationBoost
-        #endif
-    }
+    return glass
 }
