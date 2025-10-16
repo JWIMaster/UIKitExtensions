@@ -116,10 +116,12 @@
 }
 
 - (void) updatePrecalculatedBlurKernel {
-	uint32_t radius = (uint32_t)floor(_blurRadius * 3. * sqrt(2 * M_PI) / 4 + 0.5);
-	radius += (radius + 1) % 2;
-	_precalculatedBlurKernel = radius;
+    CGFloat effectiveRadius = _blurRadius * _scaleFactor;
+    uint32_t radius = (uint32_t)floor(effectiveRadius * 3. * sqrt(2 * M_PI) / 4 + 0.5);
+    radius += (radius + 1) % 2;
+    _precalculatedBlurKernel = radius;
 }
+
 
 - (void) setScaleFactor:(CGFloat)scaleFactor {
 	_scaleFactor = scaleFactor;
