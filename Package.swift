@@ -24,6 +24,11 @@ let package = Package(
             name: "UIKitExtensions",
             dependencies: ["UIKitCompatKit"],
             path: "Sources/UIKitExtensions"),
+        .target(
+            name: "FXBlurView",
+            path: "Sources/FXBlurView",
+            publicHeadersPath: "."
+        ),
         .testTarget(
             name: "UIKitExtensionsTests",
             dependencies: ["UIKitExtensions"]),
