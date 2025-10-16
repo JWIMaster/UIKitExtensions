@@ -88,7 +88,8 @@ public class LiquidGlassView: UIView {
         liquidGlass.scaleFactor = scaleFactor
         liquidGlass.isUserInteractionEnabled = false
         liquidGlass.layer.cornerRadius = cornerRadius
-        liquidGlass.layer.masksToBounds = true
+        //liquidGlass.layer.masksToBounds = true
+        liquidGlass.isLiveBlurring = true
         addSubview(liquidGlass)
 
         // Subtle bluish tint overlay
