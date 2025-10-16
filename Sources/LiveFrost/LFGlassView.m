@@ -44,6 +44,8 @@
 
 @property (nonatomic, strong, readonly) CALayer *backgroundColorLayer;
 
+@property (nonatomic, assign) CGFloat rawBlurRadius;
+
 - (void) updatePrecalculatedBlurKernel;
 - (void) adjustImageBuffersAndLayerFromFrame:(CGRect)fromFrame;
 - (void) recreateImageBuffers;
@@ -111,12 +113,13 @@
 }
 
 - (void) setBlurRadius:(CGFloat)blurRadius {
-	_blurRadius = blurRadius * _scaleFactor;
+    _rawBlurRadius = blurRadius;
 	[self updatePrecalculatedBlurKernel];
 }
 
 - (void) updatePrecalculatedBlurKernel {
-	uint32_t radius = (uint32_t)floor(_blurRadius * 3. * sqrt(2 * M_PI) / 4 + 0.5);
+    CGFloat effectiveRadius = _rawBlurRadius * _scaleFactor;
+	uint32_t radius = (uint32_t)floor(effectiveRadius * 3. * sqrt(2 * M_PI) / 4 + 0.5);
 	radius += (radius + 1) % 2;
 	_precalculatedBlurKernel = radius;
 }
@@ -124,6 +127,7 @@
 - (void) setScaleFactor:(CGFloat)scaleFactor {
 	_scaleFactor = scaleFactor;
 	CGSize scaledSize = self.scaledSize;
+    [self updatePrecalculatedBlurKernel];
 	if (!CGSizeEqualToSize(_cachedBufferSize, scaledSize)) {
 		_cachedBufferSize = scaledSize;
 		[self recreateImageBuffers];
