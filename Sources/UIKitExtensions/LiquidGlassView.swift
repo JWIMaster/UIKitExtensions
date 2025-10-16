@@ -1,6 +1,5 @@
 //
-//  File.swift
-//  
+//  LiquidGlassView.swift
 //
 //  Created by JWI on 16/10/2025.
 //
@@ -9,8 +8,10 @@ import Foundation
 import UIKit
 import UIKitCompatKit
 import GPUImage1Swift
+import LiveFrost
 
-public class LiquidGlassView: UIKitCompatKit.UIVisualEffectView {
+
+public class LiquidGlassView: UIView {
 
     // MARK: - Public properties
     public var cornerRadius: CGFloat = 50 {
@@ -18,6 +19,7 @@ public class LiquidGlassView: UIKitCompatKit.UIVisualEffectView {
             layer.cornerRadius = cornerRadius
             updateMaskPath()
             updateShadow()
+            updateLayerCorners()
         }
     }
 
@@ -37,7 +39,16 @@ public class LiquidGlassView: UIKitCompatKit.UIVisualEffectView {
         didSet { applySaturationBoost() }
     }
 
+    public var blurRadius: CGFloat = 12 {
+        didSet { liquidGlass.blurRadius = blurRadius }
+    }
+
+    public var scaleFactor: CGFloat = 1 {
+        didSet { liquidGlass.scaleFactor = scaleFactor }
+    }
+
     // MARK: - Private layers
+    private let liquidGlass = LFGlassView()
     private let tintOverlay = CALayer()
     private let cornerHighlightLayer = CAGradientLayer()
     private let darkenFalloffLayer = CAGradientLayer()
@@ -50,8 +61,9 @@ public class LiquidGlassView: UIKitCompatKit.UIVisualEffectView {
 
     // MARK: - Init
     public init(blurRadius: CGFloat = 12, cornerRadius: CGFloat = 50) {
-        super.init(effect: UIBlurEffect(blurRadius: blurRadius))
+        super.init(frame: .zero)
         self.cornerRadius = cornerRadius
+        self.blurRadius = blurRadius
         setupLayers()
         applySaturationBoost()
     }
@@ -69,11 +81,21 @@ public class LiquidGlassView: UIKitCompatKit.UIVisualEffectView {
         layer.masksToBounds = false
         updateShadow()
 
+        // LFGlassView as background
+        liquidGlass.frame = bounds
+        liquidGlass.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        liquidGlass.blurRadius = blurRadius
+        liquidGlass.scaleFactor = scaleFactor
+        liquidGlass.isUserInteractionEnabled = false
+        liquidGlass.layer.cornerRadius = cornerRadius
+        liquidGlass.layer.masksToBounds = true
+        addSubview(liquidGlass)
+
         // Subtle bluish tint overlay
         tintOverlay.backgroundColor = UIColor.blue.withAlphaComponent(0.05).cgColor
         tintOverlay.cornerRadius = cornerRadius
         tintOverlay.compositingFilter = "overlayBlendMode"
-        //layer.addSublayer(tintOverlay)
+        layer.addSublayer(tintOverlay)
 
         // Soft darken towards edges (depth)
         darkenFalloffLayer.colors = [
@@ -99,7 +121,7 @@ public class LiquidGlassView: UIKitCompatKit.UIVisualEffectView {
         cornerHighlightLayer.compositingFilter = "screenBlendMode"
         layer.addSublayer(cornerHighlightLayer)
 
-        // Inner depth gradient (gives sense of glass thickness)
+        // Inner depth gradient
         innerDepthLayer.colors = [
             UIColor.black.withAlphaComponent(0.15).cgColor,
             UIColor.clear.cgColor,
@@ -111,7 +133,7 @@ public class LiquidGlassView: UIKitCompatKit.UIVisualEffectView {
         innerDepthLayer.compositingFilter = "softLightBlendMode"
         layer.addSublayer(innerDepthLayer)
 
-        // Refractive rim (about 10% inward from edge)
+        // Refractive rim
         refractLayer.colors = [
             UIColor.white.withAlphaComponent(0.05).cgColor,
             UIColor.clear.cgColor,
@@ -121,7 +143,7 @@ public class LiquidGlassView: UIKitCompatKit.UIVisualEffectView {
         refractLayer.startPoint = CGPoint(x: 0, y: 0)
         refractLayer.endPoint = CGPoint(x: 1, y: 1)
         refractLayer.compositingFilter = "differenceBlendMode"
-        //layer.addSublayer(refractLayer)
+        layer.addSublayer(refractLayer)
 
         // Outer rim
         rimLayer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
@@ -139,6 +161,7 @@ public class LiquidGlassView: UIKitCompatKit.UIVisualEffectView {
     // MARK: - Layout
     public override func layoutSubviews() {
         super.layoutSubviews()
+        liquidGlass.frame = bounds
         layoutLayers()
     }
 
@@ -158,6 +181,13 @@ public class LiquidGlassView: UIKitCompatKit.UIVisualEffectView {
         let mask = CAShapeLayer()
         mask.path = UIBezierPath(roundedRect: bounds, cornerRadius: cornerRadius).cgPath
         layer.mask = mask
+    }
+
+    private func updateLayerCorners() {
+        liquidGlass.layer.cornerRadius = cornerRadius
+        tintOverlay.cornerRadius = cornerRadius
+        rimLayer.cornerRadius = cornerRadius
+        diffractionLayer.cornerRadius = cornerRadius - 1
     }
 
     private func updateShadow() {
