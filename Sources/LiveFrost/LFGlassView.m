@@ -125,6 +125,7 @@
 
 - (void) setScaleFactor:(CGFloat)scaleFactor {
 	_scaleFactor = scaleFactor;
+    [self updatePrecalculatedBlurKernel];
 	CGSize scaledSize = self.scaledSize;
 	if (!CGSizeEqualToSize(_cachedBufferSize, scaledSize)) {
 		_cachedBufferSize = scaledSize;
