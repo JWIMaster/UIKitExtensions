@@ -23,12 +23,17 @@ let package = Package(
         .target(
             name: "UIKitExtensions",
             dependencies: ["UIKitCompatKit", "LiveFrost"],
-            path: "Sources/UIKitExtensions"),
-        .target(
-            name: "LiveFrost",
-            path: "Sources/LiveFrost",
-            publicHeadersPath: "."
+            path: "Sources/UIKitExtensions",
+            linkerSettings: [
+                .linkedFramework("Accelerate")
+            ]
         ),
+        
+            .target(
+                name: "LiveFrost",
+                path: "Sources/LiveFrost",
+                publicHeadersPath: "."
+            ),
         .testTarget(
             name: "UIKitExtensionsTests",
             dependencies: ["UIKitExtensions"]),
