@@ -8,6 +8,7 @@
 import Foundation
 import UIKit
 import UIKitCompatKit
+import GPUImage1Swift
 
 public class LiquidGlassView: UIKitCompatKit.UIVisualEffectView {
 
