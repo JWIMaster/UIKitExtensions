@@ -22,13 +22,8 @@ let package = Package(
         // Targets can depend on other targets in this package, and on products in packages this package depends on.
         .target(
             name: "UIKitExtensions",
-            dependencies: ["UIKitCompatKit", "LiveFrost"],
+            dependencies: ["UIKitCompatKit"],
             path: "Sources/UIKitExtensions"),
-        .target(
-            name: "LiveFrost",
-            path: "Sources/LiveFrost",
-            publicHeadersPath: "."
-        ),
         .testTarget(
             name: "UIKitExtensionsTests",
             dependencies: ["UIKitExtensions"]),
