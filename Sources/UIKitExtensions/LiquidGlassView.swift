@@ -66,7 +66,7 @@ public class LiquidGlassView: LFGlassView {
     private func setupLayers() {
         clipsToBounds = true
         layer.cornerRadius = cornerRadius
-        //layer.masksToBounds = false
+        layer.masksToBounds = false
         //updateShadow()
 
         // Bluish tint
