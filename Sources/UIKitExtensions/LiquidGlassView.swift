@@ -87,6 +87,8 @@ public class LiquidGlassView: UIView {
         // Bluish tint
         tintOverlay.backgroundColor = UIColor.blue.withAlphaComponent(0.05).cgColor
         tintOverlay.compositingFilter = "overlayBlendMode"
+        tintOverlay.cornerRadius = cornerRadius
+        tintOverlay.masksToBounds = true
         layer.addSublayer(tintOverlay)
 
         // Darken edges
@@ -94,6 +96,8 @@ public class LiquidGlassView: UIView {
         darkenFalloffLayer.startPoint = CGPoint(x: 0.5, y: 1)
         darkenFalloffLayer.endPoint = CGPoint(x: 0.5, y: 0)
         darkenFalloffLayer.compositingFilter = "multiplyBlendMode"
+        darkenFalloffLayer.cornerRadius = cornerRadius
+        darkenFalloffLayer.masksToBounds = true
         layer.addSublayer(darkenFalloffLayer)
 
         // Corner highlights
@@ -107,6 +111,8 @@ public class LiquidGlassView: UIView {
         cornerHighlightLayer.startPoint = CGPoint(x: 0, y: 0)
         cornerHighlightLayer.endPoint = CGPoint(x: 1, y: 1)
         cornerHighlightLayer.compositingFilter = "screenBlendMode"
+        cornerHighlightLayer.cornerRadius = cornerRadius
+        cornerHighlightLayer.masksToBounds = true
         layer.addSublayer(cornerHighlightLayer)
 
         // Inner depth gradient
@@ -119,6 +125,8 @@ public class LiquidGlassView: UIView {
         innerDepthLayer.startPoint = CGPoint(x: 0.5, y: 1)
         innerDepthLayer.endPoint = CGPoint(x: 0.5, y: 0)
         innerDepthLayer.compositingFilter = "softLightBlendMode"
+        innerDepthLayer.cornerRadius = cornerRadius
+        innerDepthLayer.masksToBounds = true
         layer.addSublayer(innerDepthLayer)
 
         // Refractive rim
@@ -131,20 +139,27 @@ public class LiquidGlassView: UIView {
         refractLayer.startPoint = CGPoint(x: 0, y: 0)
         refractLayer.endPoint = CGPoint(x: 1, y: 1)
         refractLayer.compositingFilter = "differenceBlendMode"
+        refractLayer.cornerRadius = cornerRadius
+        refractLayer.masksToBounds = true
         layer.addSublayer(refractLayer)
 
         // Outer rim
         rimLayer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
         rimLayer.borderWidth = 0.8
+        rimLayer.cornerRadius = cornerRadius
+        rimLayer.masksToBounds = true
         layer.addSublayer(rimLayer)
 
         // Diffraction
         diffractionLayer.backgroundColor = UIColor.white.withAlphaComponent(0.03).cgColor
         diffractionLayer.compositingFilter = "differenceBlendMode"
+        diffractionLayer.cornerRadius = cornerRadius - 1
+        diffractionLayer.masksToBounds = true
         layer.addSublayer(diffractionLayer)
 
         updateCornersAndShadow()
     }
+
 
     // MARK: - Layout
     public override func layoutSubviews() {
@@ -159,7 +174,6 @@ public class LiquidGlassView: UIView {
         rimLayer.frame = bounds
         diffractionLayer.frame = bounds.insetBy(dx: inset, dy: inset)
         updateLayerCorners()
-        applyMaskToLayers()
     }
 
     private func updateCornersAndShadow() {
@@ -173,20 +187,6 @@ public class LiquidGlassView: UIView {
         blurView.layer.cornerRadius = cornerRadius
     }
     
-    
-    private func applyMaskToLayers() {
-        let maskLayer = CAShapeLayer()
-        maskLayer.path = UIBezierPath(roundedRect: bounds, cornerRadius: cornerRadius).cgPath
-        
-        // Apply the same mask to all layers that stick out
-        tintOverlay.mask = maskLayer
-        darkenFalloffLayer.mask = maskLayer
-        cornerHighlightLayer.mask = maskLayer
-        innerDepthLayer.mask = maskLayer
-        refractLayer.mask = maskLayer
-        diffractionLayer.mask = maskLayer
-    }
-
 
     private func updateLayerCorners() {
         tintOverlay.cornerRadius = cornerRadius
