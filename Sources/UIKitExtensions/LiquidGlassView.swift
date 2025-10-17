@@ -73,7 +73,7 @@ public class LiquidGlassView: LFGlassView {
         tintOverlay.backgroundColor = UIColor.blue.withAlphaComponent(0.05).cgColor
         tintOverlay.cornerRadius = cornerRadius
         tintOverlay.compositingFilter = "overlayBlendMode"
-        layer.addSublayer(tintOverlay)
+        //layer.addSublayer(tintOverlay)
 
         // Darken edges
         darkenFalloffLayer.colors = [
@@ -84,7 +84,7 @@ public class LiquidGlassView: LFGlassView {
         darkenFalloffLayer.endPoint = CGPoint(x: 0.5, y: 0)
         darkenFalloffLayer.locations = [0, 1]
         darkenFalloffLayer.compositingFilter = "multiplyBlendMode"
-        layer.addSublayer(darkenFalloffLayer)
+        //layer.addSublayer(darkenFalloffLayer)
 
         // Corner highlights
         cornerHighlightLayer.colors = [
@@ -97,7 +97,7 @@ public class LiquidGlassView: LFGlassView {
         cornerHighlightLayer.startPoint = CGPoint(x: 0, y: 0)
         cornerHighlightLayer.endPoint = CGPoint(x: 1, y: 1)
         cornerHighlightLayer.compositingFilter = "screenBlendMode"
-        layer.addSublayer(cornerHighlightLayer)
+        //layer.addSublayer(cornerHighlightLayer)
 
         // Inner depth gradient
         innerDepthLayer.colors = [
@@ -109,7 +109,7 @@ public class LiquidGlassView: LFGlassView {
         innerDepthLayer.startPoint = CGPoint(x: 0.5, y: 1)
         innerDepthLayer.endPoint = CGPoint(x: 0.5, y: 0)
         innerDepthLayer.compositingFilter = "softLightBlendMode"
-        layer.addSublayer(innerDepthLayer)
+        //layer.addSublayer(innerDepthLayer)
 
         // Refractive rim
         refractLayer.colors = [
@@ -121,19 +121,19 @@ public class LiquidGlassView: LFGlassView {
         refractLayer.startPoint = CGPoint(x: 0, y: 0)
         refractLayer.endPoint = CGPoint(x: 1, y: 1)
         refractLayer.compositingFilter = "differenceBlendMode"
-        layer.addSublayer(refractLayer)
+        //layer.addSublayer(refractLayer)
 
         // Outer rim
         rimLayer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
         rimLayer.borderWidth = 0.8
         rimLayer.cornerRadius = cornerRadius
-        layer.addSublayer(rimLayer)
+        //layer.addSublayer(rimLayer)
 
         // Diffraction / micro refraction
         diffractionLayer.backgroundColor = UIColor.white.withAlphaComponent(0.03).cgColor
         diffractionLayer.cornerRadius = cornerRadius - 1
         diffractionLayer.compositingFilter = "differenceBlendMode"
-        layer.addSublayer(diffractionLayer)
+        //layer.addSublayer(diffractionLayer)
     }
 
     // MARK: - Layout
