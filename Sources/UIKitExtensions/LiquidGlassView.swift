@@ -11,12 +11,10 @@ public class LiquidGlassView: LFGlassView {
     // MARK: - Public properties
     public var cornerRadius: CGFloat = 50 {
         didSet {
-            // root layer corner used only for shadow path visual consistency
             layer.cornerRadius = cornerRadius
-            contentContainer.layer.cornerRadius = cornerRadius
-            layoutIfNeeded()
+            //updateMaskPath()
             updateShadow()
-            updateLayerCorners()
+            //updateLayerCorners()
         }
     }
 
@@ -36,8 +34,7 @@ public class LiquidGlassView: LFGlassView {
         didSet { applySaturationBoost() }
     }
 
-    // MARK: - Subviews and decorative layers
-    private let contentContainer = UIView()
+    // MARK: - Decorative layers
     private let tintOverlay = CALayer()
     private let cornerHighlightLayer = CAGradientLayer()
     private let darkenFalloffLayer = CAGradientLayer()
@@ -45,7 +42,7 @@ public class LiquidGlassView: LFGlassView {
     private let refractLayer = CAGradientLayer()
     private let rimLayer = CALayer()
     private let diffractionLayer = CALayer()
-
+    
     private var saturationFilter: GPUImageSaturationFilter?
 
     // MARK: - Init
@@ -54,8 +51,6 @@ public class LiquidGlassView: LFGlassView {
         self.blurRadius = blurRadius
         self.cornerRadius = cornerRadius
         isLiveBlurring = true
-
-        setupHierarchy()
         setupLayers()
         applySaturationBoost()
     }
@@ -63,42 +58,22 @@ public class LiquidGlassView: LFGlassView {
     required init?(coder: NSCoder) {
         super.init(coder: coder)
         isLiveBlurring = true
-
-        setupHierarchy()
         setupLayers()
         applySaturationBoost()
     }
 
-    // MARK: - View hierarchy
-    private func setupHierarchy() {
-        // allow shadow to draw outside bounds
-        clipsToBounds = false
-        layer.masksToBounds = false
-
-        // content container holds blur and all overlays, and is clipped
-        contentContainer.clipsToBounds = true
-        contentContainer.layer.masksToBounds = true
-        contentContainer.layer.cornerRadius = cornerRadius
-        contentContainer.backgroundColor = .clear
-
-        // insert content container below any potential other UI you may add
-        addSubview(contentContainer)
-
-        // important: if LFGlassView draws blur into its own layer, ensure its content
-        // appears inside the container. If LFGlassView expects to be the drawing layer,
-        // you may need to add a backing view for the blur as a subview of contentContainer.
-        // Here we rely on contentContainer to host the decorative sublayers only.
-    }
-
     // MARK: - Setup layers
     private func setupLayers() {
+        clipsToBounds = true
+        layer.cornerRadius = cornerRadius
+        layer.masksToBounds = false
         updateShadow()
 
         // Bluish tint
         tintOverlay.backgroundColor = UIColor.blue.withAlphaComponent(0.05).cgColor
         tintOverlay.cornerRadius = cornerRadius
         tintOverlay.compositingFilter = "overlayBlendMode"
-        contentContainer.layer.addSublayer(tintOverlay)
+        layer.addSublayer(tintOverlay)
 
         // Darken edges
         darkenFalloffLayer.colors = [
@@ -109,7 +84,7 @@ public class LiquidGlassView: LFGlassView {
         darkenFalloffLayer.endPoint = CGPoint(x: 0.5, y: 0)
         darkenFalloffLayer.locations = [0, 1]
         darkenFalloffLayer.compositingFilter = "multiplyBlendMode"
-        contentContainer.layer.addSublayer(darkenFalloffLayer)
+        layer.addSublayer(darkenFalloffLayer)
 
         // Corner highlights
         cornerHighlightLayer.colors = [
@@ -122,7 +97,7 @@ public class LiquidGlassView: LFGlassView {
         cornerHighlightLayer.startPoint = CGPoint(x: 0, y: 0)
         cornerHighlightLayer.endPoint = CGPoint(x: 1, y: 1)
         cornerHighlightLayer.compositingFilter = "screenBlendMode"
-        contentContainer.layer.addSublayer(cornerHighlightLayer)
+        layer.addSublayer(cornerHighlightLayer)
 
         // Inner depth gradient
         innerDepthLayer.colors = [
@@ -134,7 +109,7 @@ public class LiquidGlassView: LFGlassView {
         innerDepthLayer.startPoint = CGPoint(x: 0.5, y: 1)
         innerDepthLayer.endPoint = CGPoint(x: 0.5, y: 0)
         innerDepthLayer.compositingFilter = "softLightBlendMode"
-        contentContainer.layer.addSublayer(innerDepthLayer)
+        layer.addSublayer(innerDepthLayer)
 
         // Refractive rim
         refractLayer.colors = [
@@ -146,75 +121,57 @@ public class LiquidGlassView: LFGlassView {
         refractLayer.startPoint = CGPoint(x: 0, y: 0)
         refractLayer.endPoint = CGPoint(x: 1, y: 1)
         refractLayer.compositingFilter = "differenceBlendMode"
-        contentContainer.layer.addSublayer(refractLayer)
+        layer.addSublayer(refractLayer)
 
         // Outer rim
         rimLayer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
         rimLayer.borderWidth = 0.8
         rimLayer.cornerRadius = cornerRadius
-        contentContainer.layer.addSublayer(rimLayer)
+        layer.addSublayer(rimLayer)
 
         // Diffraction / micro refraction
         diffractionLayer.backgroundColor = UIColor.white.withAlphaComponent(0.03).cgColor
-        diffractionLayer.cornerRadius = max(0, cornerRadius - 1)
+        diffractionLayer.cornerRadius = cornerRadius - 1
         diffractionLayer.compositingFilter = "differenceBlendMode"
-        contentContainer.layer.addSublayer(diffractionLayer)
+        layer.addSublayer(diffractionLayer)
     }
 
     // MARK: - Layout
     public override func layoutSubviews() {
         super.layoutSubviews()
-
-        // place container to match root bounds
-        contentContainer.frame = bounds
-
         layoutLayers()
-        updateLayerCorners()
-        updateShadow()
+        //updateMaskPath()
     }
 
     private func layoutLayers() {
         let inset: CGFloat = 2
-        tintOverlay.frame = contentContainer.bounds
-        darkenFalloffLayer.frame = contentContainer.bounds
-        cornerHighlightLayer.frame = contentContainer.bounds
-        innerDepthLayer.frame = contentContainer.bounds.insetBy(dx: inset * 0.5, dy: inset * 0.5)
-        refractLayer.frame = contentContainer.bounds.insetBy(dx: contentContainer.bounds.width * 0.05,
-                                                             dy: contentContainer.bounds.height * 0.05)
-        rimLayer.frame = contentContainer.bounds
-        diffractionLayer.frame = contentContainer.bounds.insetBy(dx: inset, dy: inset)
+        tintOverlay.frame = bounds
+        darkenFalloffLayer.frame = bounds
+        cornerHighlightLayer.frame = bounds
+        innerDepthLayer.frame = bounds.insetBy(dx: inset * 0.5, dy: inset * 0.5)
+        refractLayer.frame = bounds.insetBy(dx: bounds.width * 0.05, dy: bounds.height * 0.05)
+        rimLayer.frame = bounds
+        diffractionLayer.frame = bounds.insetBy(dx: inset, dy: inset)
+        updateLayerCorners()
+    }
+
+    private func updateMaskPath() {
+        let mask = CAShapeLayer()
+        mask.path = UIBezierPath(roundedRect: bounds, cornerRadius: cornerRadius).cgPath
+        layer.mask = mask
     }
 
     private func updateLayerCorners() {
         tintOverlay.cornerRadius = cornerRadius
         rimLayer.cornerRadius = cornerRadius
-        diffractionLayer.cornerRadius = max(0, cornerRadius - 1)
-        contentContainer.layer.cornerRadius = cornerRadius
+        diffractionLayer.cornerRadius = cornerRadius - 1
     }
 
     private func updateShadow() {
-        // Root layer retains shadow. Keep masksToBounds false so shadow can draw.
         layer.shadowColor = UIColor.black.cgColor
         layer.shadowOpacity = shadowOpacity
         layer.shadowRadius = shadowRadius
         layer.shadowOffset = shadowOffset
-
-        // Use a rounded shadow path for performance and stability
-        let shadowRect = bounds
-        if shadowRect.width > 0 && shadowRect.height > 0 {
-            layer.shadowPath = UIBezierPath(roundedRect: shadowRect, cornerRadius: cornerRadius).cgPath
-        } else {
-            layer.shadowPath = nil
-        }
-
-        // modern iOS niceties
-        layer.allowsEdgeAntialiasing = true
-        layer.shouldRasterize = false
-        layer.rasterizationScale = UIScreen.main.scale
-
-        // ensure content layer antialiasing for smoother corners
-        contentContainer.layer.allowsEdgeAntialiasing = true
-        contentContainer.layer.contentsScale = UIScreen.main.scale
     }
 
     private func applySaturationBoost() {
