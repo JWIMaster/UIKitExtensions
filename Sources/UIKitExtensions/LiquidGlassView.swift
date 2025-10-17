@@ -54,13 +54,11 @@ public class LiquidGlassView: UIView {
     private var saturationFilter: GPUImageSaturationFilter?
 
     // MARK: - Init
-    public init(blurRadius: CGFloat = 12, cornerRadius: CGFloat = 50) {
+    public init(blurRadius: CGFloat = 12, cornerRadius: CGFloat = 50, snaphshotTargetView: UIView?) {
         super.init(frame: .zero)
         self.cornerRadius = cornerRadius
         self.blurRadius = blurRadius
-        if self.snapshotTargetView == nil {
-            self.snapshotTargetView = self.superview
-        }
+        self.snapshotTargetView = snaphshotTargetView
         setupView()
         setupLayers()
         applySaturationBoost()
