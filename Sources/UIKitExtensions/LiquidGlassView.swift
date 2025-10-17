@@ -11,9 +11,10 @@ public class LiquidGlassView: LFGlassView {
     // MARK: - Public properties
     public var cornerRadius: CGFloat = 50 {
         didSet {
-            updateMaskPath()
-            updateLayerCorners()
+            layer.cornerRadius = cornerRadius
+            //updateMaskPath()
             updateShadow()
+            //updateLayerCorners()
         }
     }
 
@@ -34,7 +35,6 @@ public class LiquidGlassView: LFGlassView {
     }
 
     // MARK: - Decorative layers
-    private let contentMaskLayer = CAShapeLayer()
     private let tintOverlay = CALayer()
     private let cornerHighlightLayer = CAGradientLayer()
     private let darkenFalloffLayer = CAGradientLayer()
@@ -42,7 +42,7 @@ public class LiquidGlassView: LFGlassView {
     private let refractLayer = CAGradientLayer()
     private let rimLayer = CALayer()
     private let diffractionLayer = CALayer()
-
+    
     private var saturationFilter: GPUImageSaturationFilter?
 
     // MARK: - Init
@@ -64,16 +64,14 @@ public class LiquidGlassView: LFGlassView {
 
     // MARK: - Setup layers
     private func setupLayers() {
-        clipsToBounds = false  // we’ll mask only the content area
+        clipsToBounds = true
+        layer.cornerRadius = cornerRadius
         layer.masksToBounds = false
         updateShadow()
 
-        // Create and apply the mask layer for corner rounding
-        contentMaskLayer.fillColor = UIColor.black.cgColor
-        layer.mask = contentMaskLayer
-
         // Bluish tint
         tintOverlay.backgroundColor = UIColor.blue.withAlphaComponent(0.05).cgColor
+        tintOverlay.cornerRadius = cornerRadius
         tintOverlay.compositingFilter = "overlayBlendMode"
         layer.addSublayer(tintOverlay)
 
@@ -128,10 +126,12 @@ public class LiquidGlassView: LFGlassView {
         // Outer rim
         rimLayer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
         rimLayer.borderWidth = 0.8
+        rimLayer.cornerRadius = cornerRadius
         layer.addSublayer(rimLayer)
 
         // Diffraction / micro refraction
         diffractionLayer.backgroundColor = UIColor.white.withAlphaComponent(0.03).cgColor
+        diffractionLayer.cornerRadius = cornerRadius - 1
         diffractionLayer.compositingFilter = "differenceBlendMode"
         layer.addSublayer(diffractionLayer)
     }
@@ -140,7 +140,7 @@ public class LiquidGlassView: LFGlassView {
     public override func layoutSubviews() {
         super.layoutSubviews()
         layoutLayers()
-        updateMaskPath()
+        //updateMaskPath()
     }
 
     private func layoutLayers() {
@@ -156,8 +156,9 @@ public class LiquidGlassView: LFGlassView {
     }
 
     private func updateMaskPath() {
-        let path = UIBezierPath(roundedRect: bounds, cornerRadius: cornerRadius).cgPath
-        contentMaskLayer.path = path
+        let mask = CAShapeLayer()
+        mask.path = UIBezierPath(roundedRect: bounds, cornerRadius: cornerRadius).cgPath
+        layer.mask = mask
     }
 
     private func updateLayerCorners() {
@@ -171,7 +172,6 @@ public class LiquidGlassView: LFGlassView {
         layer.shadowOpacity = shadowOpacity
         layer.shadowRadius = shadowRadius
         layer.shadowOffset = shadowOffset
-        layer.shadowPath = UIBezierPath(roundedRect: bounds, cornerRadius: cornerRadius).cgPath
     }
 
     private func applySaturationBoost() {
