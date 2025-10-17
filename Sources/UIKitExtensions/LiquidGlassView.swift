@@ -21,7 +21,7 @@ public class LiquidGlassView: UIView {
         didSet { updateCornersAndShadow() }
     }
     
-    public var shadowOffset: CGSize = CGSize(width: 0, height: 25) {
+    public var shadowOffset: CGSize = CGSize(width: 0, height: 0) {
         didSet { updateCornersAndShadow() }
     }
 
