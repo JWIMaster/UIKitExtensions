@@ -64,10 +64,10 @@ public class LiquidGlassView: LFGlassView {
 
     // MARK: - Setup layers
     private func setupLayers() {
-        clipsToBounds = true
-        layer.cornerRadius = cornerRadius
-        layer.masksToBounds = false
-        updateShadow()
+        //clipsToBounds = true
+        //layer.cornerRadius = cornerRadius
+        //layer.masksToBounds = false
+        //updateShadow()
 
         // Bluish tint
         tintOverlay.backgroundColor = UIColor.blue.withAlphaComponent(0.05).cgColor
