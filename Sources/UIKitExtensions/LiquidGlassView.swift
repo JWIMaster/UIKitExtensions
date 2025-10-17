@@ -159,6 +159,7 @@ public class LiquidGlassView: UIView {
         rimLayer.frame = bounds
         diffractionLayer.frame = bounds.insetBy(dx: inset, dy: inset)
         updateLayerCorners()
+        applyMaskToLayers()
     }
 
     private func updateCornersAndShadow() {
@@ -171,6 +172,21 @@ public class LiquidGlassView: UIView {
         updateLayerCorners()
         blurView.layer.cornerRadius = cornerRadius
     }
+    
+    
+    private func applyMaskToLayers() {
+        let maskLayer = CAShapeLayer()
+        maskLayer.path = UIBezierPath(roundedRect: bounds, cornerRadius: cornerRadius).cgPath
+        
+        // Apply the same mask to all layers that stick out
+        tintOverlay.mask = maskLayer
+        darkenFalloffLayer.mask = maskLayer
+        cornerHighlightLayer.mask = maskLayer
+        innerDepthLayer.mask = maskLayer
+        refractLayer.mask = maskLayer
+        diffractionLayer.mask = maskLayer
+    }
+
 
     private func updateLayerCorners() {
         tintOverlay.cornerRadius = cornerRadius
