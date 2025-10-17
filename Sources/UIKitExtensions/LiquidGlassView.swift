@@ -74,7 +74,7 @@ public class LiquidGlassView: UIView {
 
     // MARK: - Setup
     private func setupView() {
-        clipsToBounds = false
+        clipsToBounds = true
         layer.masksToBounds = false
 
         blurView.isLiveBlurring = true
@@ -94,7 +94,7 @@ public class LiquidGlassView: UIView {
         darkenFalloffLayer.startPoint = CGPoint(x: 0.5, y: 1)
         darkenFalloffLayer.endPoint = CGPoint(x: 0.5, y: 0)
         darkenFalloffLayer.compositingFilter = "multiplyBlendMode"
-        //layer.addSublayer(darkenFalloffLayer)
+        layer.addSublayer(darkenFalloffLayer)
 
         // Corner highlights
         cornerHighlightLayer.colors = [
