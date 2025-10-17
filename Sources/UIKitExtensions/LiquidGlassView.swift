@@ -64,7 +64,7 @@ public class LiquidGlassView: LFGlassView {
 
     // MARK: - Setup layers
     private func setupLayers() {
-        //clipsToBounds = true
+        clipsToBounds = true
         //layer.cornerRadius = cornerRadius
         //layer.masksToBounds = false
         //updateShadow()
