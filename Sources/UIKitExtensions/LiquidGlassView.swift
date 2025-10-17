@@ -52,14 +52,14 @@ public class LiquidGlassView: LFGlassView {
         self.cornerRadius = cornerRadius
         isLiveBlurring = true
         setupLayers()
-        applySaturationBoost()
+        //applySaturationBoost()
     }
 
     required init?(coder: NSCoder) {
         super.init(coder: coder)
         isLiveBlurring = true
         setupLayers()
-        applySaturationBoost()
+        //applySaturationBoost()
     }
 
     // MARK: - Setup layers
