@@ -177,7 +177,11 @@ public class LiquidGlassView: UIView {
         refractLayer.frame = bounds.insetBy(dx: bounds.width * 0.05, dy: bounds.height * 0.05)
         rimLayer.frame = bounds
         diffractionLayer.frame = bounds.insetBy(dx: inset, dy: inset)
-        layer.shadowPath = CGPath(rect: frame, transform: nil)
+        layer.shadowPath = UIBezierPath(
+            roundedRect: blurView.frame,
+            cornerRadius: blurView.layer.cornerRadius
+        ).cgPath
+
         updateLayerCorners()
     }
 
