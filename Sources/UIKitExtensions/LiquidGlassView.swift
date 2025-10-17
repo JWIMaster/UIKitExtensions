@@ -58,6 +58,9 @@ public class LiquidGlassView: UIView {
         super.init(frame: .zero)
         self.cornerRadius = cornerRadius
         self.blurRadius = blurRadius
+        if self.snapshotTargetView == nil {
+            self.snapshotTargetView = self.superview
+        }
         setupView()
         setupLayers()
         applySaturationBoost()
