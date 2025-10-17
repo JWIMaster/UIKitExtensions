@@ -17,6 +17,10 @@ public class LiquidGlassView: UIView {
         didSet { updateCornersAndShadow() }
     }
 
+    public var shadowColor: CGColor = UIColor.black.cgColor {
+        didSet { updateCornersAndShadow() }
+    }
+    
     public var shadowOffset: CGSize = CGSize(width: 0, height: 25) {
         didSet { updateCornersAndShadow() }
     }
@@ -178,7 +182,7 @@ public class LiquidGlassView: UIView {
 
     private func updateCornersAndShadow() {
         layer.cornerRadius = cornerRadius
-        layer.shadowColor = UIColor.black.cgColor
+        layer.shadowColor = shadowColor
         layer.shadowOpacity = shadowOpacity
         layer.shadowRadius = shadowRadius
         layer.shadowOffset = shadowOffset
