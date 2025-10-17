@@ -34,7 +34,7 @@ public class LiquidGlassView: UIView {
     }
 
     public var frameInterval: Int = 3 {
-        didSet { blurView.frameInterval = frameInterval }
+        didSet { blurView.frameInterval = UInt(frameInterval) }
     }
 
     public weak var snapshotTargetView: UIView? {
@@ -76,7 +76,7 @@ public class LiquidGlassView: UIView {
         layer.masksToBounds = false
 
         blurView.isLiveBlurring = true
-        blurView.cornerRadius = cornerRadius
+        blurView.layer.cornerRadius = cornerRadius
         addSubview(blurView)
     }
 
@@ -166,7 +166,7 @@ public class LiquidGlassView: UIView {
         layer.shadowOffset = shadowOffset
 
         updateLayerCorners()
-        blurView.cornerRadius = cornerRadius
+        blurView.layer.cornerRadius = cornerRadius
     }
 
     private func updateLayerCorners() {
