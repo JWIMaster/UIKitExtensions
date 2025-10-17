@@ -1,33 +1,20 @@
+//
+//  LiquidGlassView.swift
+//
+
 import UIKit
-import LiveFrost
 import GPUImage1Swift
+import LiveFrost
 
-public class LiquidGlassView: UIView {
-
-    // MARK: - Internal blur view
-    private let blurView = LFGlassView()
-
-    // MARK: - Exposed LFGlassView properties
-    public var scaleFactor: CGFloat {
-        get { blurView.scaleFactor }
-        set { blurView.scaleFactor = newValue }
-    }
-
-    public var frameInterval: Int {
-        get { Int(blurView.frameInterval) }
-        set { blurView.frameInterval = UInt(newValue) }
-    }
-
-    public var snapshotTargetView: UIView? {
-        get { blurView.snapshotTargetView }
-        set { blurView.snapshotTargetView = newValue }
-    }
+public class LiquidGlassView: LFGlassView {
 
     // MARK: - Public properties
     public var cornerRadius: CGFloat = 50 {
         didSet {
-            blurView.layer.cornerRadius = cornerRadius
+            layer.cornerRadius = cornerRadius
+            //updateMaskPath()
             updateShadow()
+            //updateLayerCorners()
         }
     }
 
@@ -47,10 +34,6 @@ public class LiquidGlassView: UIView {
         didSet { applySaturationBoost() }
     }
 
-    public var blurRadius: CGFloat = 12 {
-        didSet { blurView.blurRadius = blurRadius }
-    }
-
     // MARK: - Decorative layers
     private let tintOverlay = CALayer()
     private let cornerHighlightLayer = CAGradientLayer()
@@ -59,44 +42,38 @@ public class LiquidGlassView: UIView {
     private let refractLayer = CAGradientLayer()
     private let rimLayer = CALayer()
     private let diffractionLayer = CALayer()
-
+    
     private var saturationFilter: GPUImageSaturationFilter?
 
     // MARK: - Init
     public init(blurRadius: CGFloat = 12, cornerRadius: CGFloat = 50) {
         super.init(frame: .zero)
         self.blurRadius = blurRadius
-        setupBlur()
+        self.cornerRadius = cornerRadius
+        isLiveBlurring = true
         setupLayers()
         applySaturationBoost()
-        updateShadow()
     }
 
     required init?(coder: NSCoder) {
         super.init(coder: coder)
-        setupBlur()
+        isLiveBlurring = true
         setupLayers()
         applySaturationBoost()
-        updateShadow()
     }
 
-    // MARK: - Setup
-    private func setupBlur() {
-        blurView.frame = bounds
-        blurView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-        blurView.blurRadius = blurRadius
-        blurView.isLiveBlurring = true
-        blurView.layer.masksToBounds = true
-        blurView.layer.cornerRadius = cornerRadius
-        addSubview(blurView)
-    }
-
+    // MARK: - Setup layers
     private func setupLayers() {
+        clipsToBounds = true
+        layer.cornerRadius = cornerRadius
+        layer.masksToBounds = false
+        updateShadow()
+
         // Bluish tint
         tintOverlay.backgroundColor = UIColor.blue.withAlphaComponent(0.05).cgColor
         tintOverlay.cornerRadius = cornerRadius
         tintOverlay.compositingFilter = "overlayBlendMode"
-        blurView.layer.addSublayer(tintOverlay)
+        layer.addSublayer(tintOverlay)
 
         // Darken edges
         darkenFalloffLayer.colors = [
@@ -107,7 +84,7 @@ public class LiquidGlassView: UIView {
         darkenFalloffLayer.endPoint = CGPoint(x: 0.5, y: 0)
         darkenFalloffLayer.locations = [0, 1]
         darkenFalloffLayer.compositingFilter = "multiplyBlendMode"
-        blurView.layer.addSublayer(darkenFalloffLayer)
+        layer.addSublayer(darkenFalloffLayer)
 
         // Corner highlights
         cornerHighlightLayer.colors = [
@@ -120,7 +97,7 @@ public class LiquidGlassView: UIView {
         cornerHighlightLayer.startPoint = CGPoint(x: 0, y: 0)
         cornerHighlightLayer.endPoint = CGPoint(x: 1, y: 1)
         cornerHighlightLayer.compositingFilter = "screenBlendMode"
-        blurView.layer.addSublayer(cornerHighlightLayer)
+        layer.addSublayer(cornerHighlightLayer)
 
         // Inner depth gradient
         innerDepthLayer.colors = [
@@ -132,7 +109,7 @@ public class LiquidGlassView: UIView {
         innerDepthLayer.startPoint = CGPoint(x: 0.5, y: 1)
         innerDepthLayer.endPoint = CGPoint(x: 0.5, y: 0)
         innerDepthLayer.compositingFilter = "softLightBlendMode"
-        blurView.layer.addSublayer(innerDepthLayer)
+        layer.addSublayer(innerDepthLayer)
 
         // Refractive rim
         refractLayer.colors = [
@@ -144,44 +121,59 @@ public class LiquidGlassView: UIView {
         refractLayer.startPoint = CGPoint(x: 0, y: 0)
         refractLayer.endPoint = CGPoint(x: 1, y: 1)
         refractLayer.compositingFilter = "differenceBlendMode"
-        blurView.layer.addSublayer(refractLayer)
+        layer.addSublayer(refractLayer)
 
         // Outer rim
         rimLayer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
         rimLayer.borderWidth = 0.8
         rimLayer.cornerRadius = cornerRadius
-        blurView.layer.addSublayer(rimLayer)
+        layer.addSublayer(rimLayer)
 
-        // Diffraction
+        // Diffraction / micro refraction
         diffractionLayer.backgroundColor = UIColor.white.withAlphaComponent(0.03).cgColor
         diffractionLayer.cornerRadius = cornerRadius - 1
         diffractionLayer.compositingFilter = "differenceBlendMode"
-        blurView.layer.addSublayer(diffractionLayer)
+        layer.addSublayer(diffractionLayer)
     }
 
     // MARK: - Layout
     public override func layoutSubviews() {
         super.layoutSubviews()
-        blurView.frame = bounds
-        tintOverlay.frame = blurView.bounds
-        darkenFalloffLayer.frame = blurView.bounds
-        cornerHighlightLayer.frame = blurView.bounds
-        innerDepthLayer.frame = blurView.bounds.insetBy(dx: 1, dy: 1)
-        refractLayer.frame = blurView.bounds.insetBy(dx: blurView.bounds.width * 0.05, dy: blurView.bounds.height * 0.05)
-        rimLayer.frame = blurView.bounds
-        diffractionLayer.frame = blurView.bounds.insetBy(dx: 1, dy: 1)
+        layoutLayers()
+        //updateMaskPath()
     }
 
-    // MARK: - Shadow
+    private func layoutLayers() {
+        let inset: CGFloat = 2
+        tintOverlay.frame = bounds
+        darkenFalloffLayer.frame = bounds
+        cornerHighlightLayer.frame = bounds
+        innerDepthLayer.frame = bounds.insetBy(dx: inset * 0.5, dy: inset * 0.5)
+        refractLayer.frame = bounds.insetBy(dx: bounds.width * 0.05, dy: bounds.height * 0.05)
+        rimLayer.frame = bounds
+        diffractionLayer.frame = bounds.insetBy(dx: inset, dy: inset)
+        updateLayerCorners()
+    }
+
+    private func updateMaskPath() {
+        let mask = CAShapeLayer()
+        mask.path = UIBezierPath(roundedRect: bounds, cornerRadius: cornerRadius).cgPath
+        layer.mask = mask
+    }
+
+    private func updateLayerCorners() {
+        tintOverlay.cornerRadius = cornerRadius
+        rimLayer.cornerRadius = cornerRadius
+        diffractionLayer.cornerRadius = cornerRadius - 1
+    }
+
     private func updateShadow() {
         layer.shadowColor = UIColor.black.cgColor
         layer.shadowOpacity = shadowOpacity
         layer.shadowRadius = shadowRadius
         layer.shadowOffset = shadowOffset
-        layer.masksToBounds = false
     }
 
-    // MARK: - Saturation
     private func applySaturationBoost() {
         #if canImport(GPUImage1Swift)
         saturationFilter = GPUImageSaturationFilter()
