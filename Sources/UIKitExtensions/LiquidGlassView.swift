@@ -140,7 +140,7 @@ public class LiquidGlassView: LFGlassView {
     public override func layoutSubviews() {
         super.layoutSubviews()
         layoutLayers()
-        updateMaskPath()
+        //updateMaskPath()
     }
 
     private func layoutLayers() {
