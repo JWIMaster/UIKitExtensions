@@ -1,10 +1,6 @@
-//
-//  LiquidGlassView.swift
-//
-
 import UIKit
-import GPUImage1Swift
 import LiveFrost
+import GPUImage1Swift
 
 public class LiquidGlassView: LFGlassView {
 
@@ -12,9 +8,9 @@ public class LiquidGlassView: LFGlassView {
     public var cornerRadius: CGFloat = 50 {
         didSet {
             layer.cornerRadius = cornerRadius
-            updateMaskPath()
+            overlayLayer.cornerRadius = cornerRadius
             updateShadow()
-            updateLayerCorners()
+            updateMask()
         }
     }
 
@@ -34,16 +30,13 @@ public class LiquidGlassView: LFGlassView {
         didSet { applySaturationBoost() }
     }
 
-    // MARK: - Decorative layers
-    private let tintOverlay = CALayer()
-    private let cornerHighlightLayer = CAGradientLayer()
-    private let darkenFalloffLayer = CAGradientLayer()
-    private let innerDepthLayer = CAGradientLayer()
-    private let refractLayer = CAGradientLayer()
-    private let rimLayer = CALayer()
-    private let diffractionLayer = CALayer()
-    
+    // MARK: - Overlay layer
+    private let overlayLayer = CALayer()
     private var saturationFilter: GPUImageSaturationFilter?
+
+    // For subtle liquid animation
+    private var displayLink: CADisplayLink?
+    private var animationOffset: CGFloat = 0
 
     // MARK: - Init
     public init(blurRadius: CGFloat = 12, cornerRadius: CGFloat = 50) {
@@ -51,120 +44,45 @@ public class LiquidGlassView: LFGlassView {
         self.blurRadius = blurRadius
         self.cornerRadius = cornerRadius
         isLiveBlurring = true
-        setupLayers()
+        setupOverlay()
         applySaturationBoost()
+        updateShadow()
+        startLiquidAnimation()
     }
 
     required init?(coder: NSCoder) {
         super.init(coder: coder)
         isLiveBlurring = true
-        setupLayers()
+        setupOverlay()
         applySaturationBoost()
+        updateShadow()
+        startLiquidAnimation()
     }
 
-    // MARK: - Setup layers
-    private func setupLayers() {
-        clipsToBounds = true
-        layer.cornerRadius = cornerRadius
-        layer.masksToBounds = false
-        updateShadow()
+    deinit {
+        displayLink?.invalidate()
+    }
 
-        // Bluish tint
-        tintOverlay.backgroundColor = UIColor.blue.withAlphaComponent(0.05).cgColor
-        tintOverlay.cornerRadius = cornerRadius
-        tintOverlay.compositingFilter = "overlayBlendMode"
-        layer.addSublayer(tintOverlay)
-
-        // Darken edges
-        darkenFalloffLayer.colors = [
-            UIColor.black.withAlphaComponent(0.22).cgColor,
-            UIColor.clear.cgColor
-        ]
-        darkenFalloffLayer.startPoint = CGPoint(x: 0.5, y: 1)
-        darkenFalloffLayer.endPoint = CGPoint(x: 0.5, y: 0)
-        darkenFalloffLayer.locations = [0, 1]
-        darkenFalloffLayer.compositingFilter = "multiplyBlendMode"
-        layer.addSublayer(darkenFalloffLayer)
-
-        // Corner highlights
-        cornerHighlightLayer.colors = [
-            UIColor.white.withAlphaComponent(0.25).cgColor,
-            UIColor.clear.cgColor,
-            UIColor.white.withAlphaComponent(0.2).cgColor,
-            UIColor.white.withAlphaComponent(0.1).cgColor
-        ]
-        cornerHighlightLayer.locations = [0.0, 0.25, 0.9, 1.0]
-        cornerHighlightLayer.startPoint = CGPoint(x: 0, y: 0)
-        cornerHighlightLayer.endPoint = CGPoint(x: 1, y: 1)
-        cornerHighlightLayer.compositingFilter = "screenBlendMode"
-        layer.addSublayer(cornerHighlightLayer)
-
-        // Inner depth gradient
-        innerDepthLayer.colors = [
-            UIColor.black.withAlphaComponent(0.15).cgColor,
-            UIColor.clear.cgColor,
-            UIColor.white.withAlphaComponent(0.05).cgColor
-        ]
-        innerDepthLayer.locations = [0.0, 0.6, 1.0]
-        innerDepthLayer.startPoint = CGPoint(x: 0.5, y: 1)
-        innerDepthLayer.endPoint = CGPoint(x: 0.5, y: 0)
-        innerDepthLayer.compositingFilter = "softLightBlendMode"
-        layer.addSublayer(innerDepthLayer)
-
-        // Refractive rim
-        refractLayer.colors = [
-            UIColor.white.withAlphaComponent(0.05).cgColor,
-            UIColor.clear.cgColor,
-            UIColor.white.withAlphaComponent(0.05).cgColor
-        ]
-        refractLayer.locations = [0.0, 0.1, 1.0]
-        refractLayer.startPoint = CGPoint(x: 0, y: 0)
-        refractLayer.endPoint = CGPoint(x: 1, y: 1)
-        refractLayer.compositingFilter = "differenceBlendMode"
-        layer.addSublayer(refractLayer)
-
-        // Outer rim
-        rimLayer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
-        rimLayer.borderWidth = 0.8
-        rimLayer.cornerRadius = cornerRadius
-        layer.addSublayer(rimLayer)
-
-        // Diffraction / micro refraction
-        diffractionLayer.backgroundColor = UIColor.white.withAlphaComponent(0.03).cgColor
-        diffractionLayer.cornerRadius = cornerRadius - 1
-        diffractionLayer.compositingFilter = "differenceBlendMode"
-        layer.addSublayer(diffractionLayer)
+    // MARK: - Overlay setup
+    private func setupOverlay() {
+        overlayLayer.cornerRadius = cornerRadius
+        overlayLayer.masksToBounds = true
+        overlayLayer.compositingFilter = "overlayBlendMode"
+        layer.addSublayer(overlayLayer)
     }
 
     // MARK: - Layout
     public override func layoutSubviews() {
         super.layoutSubviews()
-        layoutLayers()
-        updateMaskPath()
+        overlayLayer.frame = bounds
+        updateMask()
+        overlayLayer.contents = createOverlayTexture(offset: animationOffset)
     }
 
-    private func layoutLayers() {
-        let inset: CGFloat = 2
-        tintOverlay.frame = bounds
-        darkenFalloffLayer.frame = bounds
-        cornerHighlightLayer.frame = bounds
-        innerDepthLayer.frame = bounds.insetBy(dx: inset * 0.5, dy: inset * 0.5)
-        refractLayer.frame = bounds.insetBy(dx: bounds.width * 0.05, dy: bounds.height * 0.05)
-        rimLayer.frame = bounds
-        diffractionLayer.frame = bounds.insetBy(dx: inset, dy: inset)
-        updateLayerCorners()
-    }
-
-    private func updateMaskPath() {
+    private func updateMask() {
         let mask = CAShapeLayer()
         mask.path = UIBezierPath(roundedRect: bounds, cornerRadius: cornerRadius).cgPath
         layer.mask = mask
-    }
-
-    private func updateLayerCorners() {
-        tintOverlay.cornerRadius = cornerRadius
-        rimLayer.cornerRadius = cornerRadius
-        diffractionLayer.cornerRadius = cornerRadius - 1
     }
 
     private func updateShadow() {
@@ -179,5 +97,57 @@ public class LiquidGlassView: LFGlassView {
         saturationFilter = GPUImageSaturationFilter()
         saturationFilter?.saturation = saturationBoost
         #endif
+    }
+
+    // MARK: - Create overlay texture with subtle liquid animation
+    private func createOverlayTexture(offset: CGFloat) -> CGImage? {
+        let size = bounds.size
+        guard size.width > 0, size.height > 0 else { return nil }
+
+        UIGraphicsBeginImageContextWithOptions(size, false, 0)
+        guard let ctx = UIGraphicsGetCurrentContext() else { return nil }
+
+        // Bluish tint
+        ctx.setFillColor(UIColor.blue.withAlphaComponent(0.05).cgColor)
+        ctx.fill(bounds)
+
+        // Darken bottom edges
+        let darkGradient = CGGradient(
+            colorsSpace: CGColorSpaceCreateDeviceRGB(),
+            colors: [UIColor.black.withAlphaComponent(0.22).cgColor, UIColor.clear.cgColor] as CFArray,
+            locations: [0, 1]
+        )!
+        ctx.drawLinearGradient(darkGradient,
+                               start: CGPoint(x: size.width/2, y: size.height),
+                               end: CGPoint(x: size.width/2, y: 0),
+                               options: [])
+
+        // Dynamic highlights for liquid effect
+        let highlightGradient = CGGradient(
+            colorsSpace: CGColorSpaceCreateDeviceRGB(),
+            colors: [UIColor.white.withAlphaComponent(0.2).cgColor, UIColor.clear.cgColor] as CFArray,
+            locations: [0, 1]
+        )!
+        let xOffset = sin(offset) * 10
+        let yOffset = cos(offset * 1.3) * 10
+        ctx.drawLinearGradient(highlightGradient,
+                               start: CGPoint(x: 0 + xOffset, y: 0 + yOffset),
+                               end: CGPoint(x: size.width + xOffset, y: size.height + yOffset),
+                               options: [])
+
+        let image = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+        return image?.cgImage
+    }
+
+    // MARK: - Liquid animation
+    private func startLiquidAnimation() {
+        displayLink = CADisplayLink(target: self, selector: #selector(updateAnimation))
+        displayLink?.add(to: .main, forMode: .common)
+    }
+
+    @objc private func updateAnimation() {
+        animationOffset += 0.02
+        overlayLayer.contents = createOverlayTexture(offset: animationOffset)
     }
 }
