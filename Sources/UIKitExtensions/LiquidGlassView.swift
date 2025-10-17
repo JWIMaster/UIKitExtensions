@@ -64,8 +64,8 @@ public class LiquidGlassView: LFGlassView {
 
     // MARK: - Setup layers
     private func setupLayers() {
-        //clipsToBounds = true
-        //layer.cornerRadius = cornerRadius
+        clipsToBounds = true
+        layer.cornerRadius = cornerRadius
         //layer.masksToBounds = false
         //updateShadow()
 
@@ -134,9 +134,6 @@ public class LiquidGlassView: LFGlassView {
         diffractionLayer.cornerRadius = cornerRadius - 1
         diffractionLayer.compositingFilter = "differenceBlendMode"
         layer.addSublayer(diffractionLayer)
-        
-        layer.shouldRasterize = true
-        layer.rasterizationScale = UIScreen.main.scale
     }
 
     // MARK: - Layout
