@@ -11,7 +11,7 @@ public class LiquidGlassView: LFGlassView {
     // MARK: - Public properties
     public var cornerRadius: CGFloat = 50 {
         didSet {
-            //layer.cornerRadius = cornerRadius
+            layer.cornerRadius = cornerRadius
             //updateMaskPath()
             updateShadow()
             //updateLayerCorners()
