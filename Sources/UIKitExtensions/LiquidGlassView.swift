@@ -52,14 +52,14 @@ public class LiquidGlassView: LFGlassView {
         self.cornerRadius = cornerRadius
         isLiveBlurring = true
         setupLayers()
-        //applySaturationBoost()
+        applySaturationBoost()
     }
 
     required init?(coder: NSCoder) {
         super.init(coder: coder)
         isLiveBlurring = true
         setupLayers()
-        //applySaturationBoost()
+        applySaturationBoost()
     }
 
     // MARK: - Setup layers
@@ -67,7 +67,7 @@ public class LiquidGlassView: LFGlassView {
         clipsToBounds = true
         layer.cornerRadius = cornerRadius
         layer.masksToBounds = false
-        //updateShadow()
+        updateShadow()
 
         // Bluish tint
         tintOverlay.backgroundColor = UIColor.blue.withAlphaComponent(0.05).cgColor
