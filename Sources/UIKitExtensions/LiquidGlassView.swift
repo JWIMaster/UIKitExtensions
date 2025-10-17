@@ -134,6 +134,9 @@ public class LiquidGlassView: LFGlassView {
         diffractionLayer.cornerRadius = cornerRadius - 1
         diffractionLayer.compositingFilter = "differenceBlendMode"
         layer.addSublayer(diffractionLayer)
+        
+        layer.shouldRasterize = true
+        layer.rasterizationScale = 0
     }
 
     // MARK: - Layout
