@@ -79,6 +79,7 @@ public class LiquidGlassView: UIView {
 
         blurView.isLiveBlurring = true
         blurView.layer.cornerRadius = cornerRadius
+        blurView.layer.masksToBounds = true
         addSubview(blurView)
     }
 
