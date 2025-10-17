@@ -14,8 +14,8 @@ public class LiquidGlassView: UIView {
     }
 
     public var frameInterval: Int {
-        get { blurView.frameInterval }
-        set { blurView.frameInterval = newValue }
+        get { Int(blurView.frameInterval) }
+        set { blurView.frameInterval = UInt(newValue) }
     }
 
     public var snapshotTargetView: UIView? {
