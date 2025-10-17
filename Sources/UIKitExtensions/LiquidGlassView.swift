@@ -136,7 +136,7 @@ public class LiquidGlassView: LFGlassView {
         layer.addSublayer(diffractionLayer)
         
         layer.shouldRasterize = true
-        layer.rasterizationScale = 0.1
+        layer.rasterizationScale = UIScreen.main.scale
     }
 
     // MARK: - Layout
