@@ -202,7 +202,7 @@ public class LiquidGlassView: UIView {
         let layersToFlatten: [CALayer] = [
             tintOverlay,
             darkenFalloffLayer,
-            //cornerHighlightLayer,
+            cornerHighlightLayer,
             innerDepthLayer,
             //refractLayer,
             rimLayer
