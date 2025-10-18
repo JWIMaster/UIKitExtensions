@@ -105,7 +105,7 @@ public class LiquidGlassView: UIView {
 
     private func setupLayers() {
         // configure decorative layers
-        tintOverlay.backgroundColor = UIColor.green.withAlphaComponent(0.2).cgColor
+        tintOverlay.backgroundColor = UIColor.green.withAlphaComponent(0.1).cgColor
         tintOverlay.compositingFilter = "overlayBlendMode"
         tintOverlay.cornerRadius = cornerRadius
 
