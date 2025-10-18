@@ -309,30 +309,42 @@ final class LiquidGlassCache {
     
     private init() {
         let dir = fileManager.urls(for: .cachesDirectory, in: .userDomainMask)[0]
-        cacheDirectory = dir.appendingPathComponent("LiquidGlassCache", isDirectory: true)
+        cacheDirectory = URL(fileURLWithPath: dir.path + "/LiquidGlassCache", isDirectory: true)
         try? fileManager.createDirectory(at: cacheDirectory, withIntermediateDirectories: true)
     }
+
     
     func image(for key: String) -> CGImage? {
         if let mem = memoryCache.object(forKey: key as NSString) {
             return mem
         }
-        let path = cacheDirectory.appendingPathComponent(key + ".png")
-        guard let data = try? Data(contentsOf: path),
+
+        let path = cacheDirectory.path + "/" + key + ".png"
+        let fileURL = URL(fileURLWithPath: path)
+
+        guard let data = try? Data(contentsOf: fileURL),
               let uiImage = UIImage(data: data),
               let cg = uiImage.cgImage else { return nil }
+
         memoryCache.setObject(cg, forKey: key as NSString)
         return cg
     }
+
     
     func store(_ image: CGImage, for key: String) {
         memoryCache.setObject(image, forKey: key as NSString)
-        let path = cacheDirectory.appendingPathComponent(key + ".png")
+
+        let path = cacheDirectory.path + "/" + key + ".png"
         let uiImage = UIImage(cgImage: image)
-        if let data = uiImage.pngData() {
-            try? data.write(to: path)
+        guard let data = uiImage.pngData() else { return }
+
+        do {
+            try data.write(to: URL(fileURLWithPath: path))
+        } catch {
+            print("Failed to write LiquidGlass cache to disk: \(error)")
         }
     }
+
     
     func clear() {
         memoryCache.removeAllObjects()
