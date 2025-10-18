@@ -115,6 +115,7 @@ public class LiquidGlassView: UIView {
                 solidView.layer.cornerRadius = cornerRadius
                 solidView.layer.masksToBounds = true
                 addSubview(solidView)
+                sendSubviewToBack(solidView)
             }
         } else if let blurView = blurView {
             blurView.isLiveBlurring = true
