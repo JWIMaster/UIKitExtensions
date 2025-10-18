@@ -78,7 +78,6 @@ public class LiquidGlassView: UIView {
 
     private var saturationFilter: GPUImageSaturationFilter?
     
-    private static var cachedImages: [CacheKey: CGImage] = [:]
 
     // MARK: - Init
     public init(blurRadius: CGFloat = 12, cornerRadius: CGFloat = 50, snapshotTargetView: UIView?, disableBlur: Bool = false) {
@@ -220,16 +219,13 @@ public class LiquidGlassView: UIView {
         diffractionLayer.frame = bounds.insetBy(dx: inset, dy: inset)
 
         // flatten layers
-        let key = CacheKey(size: bounds.size, tint: tintColorForGlass)
-        if let cached = LiquidGlassView.cachedImages[key] {
+        let key = "\(Int(bounds.width))x\(Int(bounds.height))_\(tintColorForGlass.hexValue)"
+
+        if let cached = LiquidGlassCache.shared.image(for: key) {
             flattenedDecorLayer.contents = cached
-            print("used cache")
         } else {
             let tempLayer = CALayer()
             layersToFlatten.forEach { tempLayer.addSublayer($0) }
-
-            // recolour tint overlay before render
-            tintOverlay.backgroundColor = tintColorForGlass.cgColor
 
             UIGraphicsBeginImageContextWithOptions(bounds.size, false, UIScreen.main.scale)
             if let ctx = UIGraphicsGetCurrentContext() {
@@ -239,10 +235,11 @@ public class LiquidGlassView: UIView {
             UIGraphicsEndImageContext()
 
             if let img = img {
-                LiquidGlassView.cachedImages[key] = img
+                LiquidGlassCache.shared.store(img, for: key)
                 flattenedDecorLayer.contents = img
             }
         }
+
 
         flattenedDecorLayer.frame = bounds
         flattenedDecorLayer.cornerRadius = cornerRadius
@@ -300,5 +297,46 @@ fileprivate extension UIColor {
         let bi = UInt32(b * 255) << 8
         let ai = UInt32(a * 255)
         return ri | gi | bi | ai
+    }
+}
+
+final class LiquidGlassCache {
+    static let shared = LiquidGlassCache()
+    
+    private let memoryCache = NSCache<NSString, CGImage>()
+    private let fileManager = FileManager.default
+    private let cacheDirectory: URL
+    
+    private init() {
+        let dir = fileManager.urls(for: .cachesDirectory, in: .userDomainMask)[0]
+        cacheDirectory = dir.appendingPathComponent("LiquidGlassCache", isDirectory: true)
+        try? fileManager.createDirectory(at: cacheDirectory, withIntermediateDirectories: true)
+    }
+    
+    func image(for key: String) -> CGImage? {
+        if let mem = memoryCache.object(forKey: key as NSString) {
+            return mem
+        }
+        let path = cacheDirectory.appendingPathComponent(key + ".png")
+        guard let data = try? Data(contentsOf: path),
+              let uiImage = UIImage(data: data),
+              let cg = uiImage.cgImage else { return nil }
+        memoryCache.setObject(cg, forKey: key as NSString)
+        return cg
+    }
+    
+    func store(_ image: CGImage, for key: String) {
+        memoryCache.setObject(image, forKey: key as NSString)
+        let path = cacheDirectory.appendingPathComponent(key + ".png")
+        let uiImage = UIImage(cgImage: image)
+        if let data = uiImage.pngData() {
+            try? data.write(to: path)
+        }
+    }
+    
+    func clear() {
+        memoryCache.removeAllObjects()
+        try? fileManager.removeItem(at: cacheDirectory)
+        try? fileManager.createDirectory(at: cacheDirectory, withIntermediateDirectories: true)
     }
 }
