@@ -221,7 +221,7 @@ public class LiquidGlassView: UIView {
         // flatten layers
         let key = "\(Int(bounds.width))x\(Int(bounds.height))_\(tintColorForGlass.hexValue)"
 
-        if let cached = LiquidGlassCache.shared.image(for: key) {
+        if let cached = LiquidGlassCache.shared.image(forKey: key) {
             flattenedDecorLayer.contents = cached
         } else {
             let tempLayer = CALayer()
@@ -235,7 +235,7 @@ public class LiquidGlassView: UIView {
             UIGraphicsEndImageContext()
 
             if let img = img {
-                LiquidGlassCache.shared.store(img, for: key)
+                LiquidGlassCache.shared.store(img, forKey: key)
                 flattenedDecorLayer.contents = img
             }
         }
@@ -302,53 +302,64 @@ fileprivate extension UIColor {
 
 final class LiquidGlassCache {
     static let shared = LiquidGlassCache()
-    
-    private let memoryCache = NSCache<NSString, CGImage>()
+
+    private let memoryCache = NSCache<NSString, UIImage>()
     private let fileManager = FileManager.default
-    private let cacheDirectory: URL
-    
+    private let cacheDirectory: NSURL
+
     private init() {
-        let dir = fileManager.urls(for: .cachesDirectory, in: .userDomainMask)[0]
-        cacheDirectory = URL(fileURLWithPath: dir.path + "/LiquidGlassCache", isDirectory: true)
-        try? fileManager.createDirectory(at: cacheDirectory, withIntermediateDirectories: true)
+        // Get Caches directory
+        let dirs = NSSearchPathForDirectoriesInDomains(.cachesDirectory, .userDomainMask, true)
+        let cachePath = dirs[0].appending("/LiquidGlassCache")
+        cacheDirectory = NSURL(fileURLWithPath: cachePath, isDirectory: true)
+
+        // Create folder if it doesn’t exist
+        if !fileManager.fileExists(atPath: cacheDirectory.path!) {
+            do {
+                try fileManager.createDirectory(at: cacheDirectory as URL, withIntermediateDirectories: true, attributes: nil)
+            } catch {
+                print("Failed to create LiquidGlass cache directory: \(error)")
+            }
+        }
     }
 
-    
-    func image(for key: String) -> CGImage? {
+    func image(forKey key: String) -> CGImage? {
+        // Try memory cache first
         if let mem = memoryCache.object(forKey: key as NSString) {
-            return mem
+            return mem.cgImage
         }
 
-        let path = cacheDirectory.path + "/" + key + ".png"
-        let fileURL = URL(fileURLWithPath: path)
+        // Try disk cache
+        let filePath = cacheDirectory.path!.appending("/\(key).png")
+        let fileURL = NSURL(fileURLWithPath: filePath)
+        if let data = NSData(contentsOf: fileURL as URL),
+           let uiImage = UIImage(data: data as Data) {
+            memoryCache.setObject(uiImage, forKey: key as NSString)
+            return uiImage.cgImage
+        }
 
-        guard let data = try? Data(contentsOf: fileURL),
-              let uiImage = UIImage(data: data),
-              let cg = uiImage.cgImage else { return nil }
-
-        memoryCache.setObject(cg, forKey: key as NSString)
-        return cg
+        return nil
     }
 
-    
-    func store(_ image: CGImage, for key: String) {
-        memoryCache.setObject(image, forKey: key as NSString)
-
-        let path = cacheDirectory.path + "/" + key + ".png"
+    func store(_ image: CGImage, forKey key: String) {
         let uiImage = UIImage(cgImage: image)
-        guard let data = uiImage.pngData() else { return }
+        memoryCache.setObject(uiImage, forKey: key as NSString)
 
-        do {
-            try data.write(to: URL(fileURLWithPath: path))
-        } catch {
-            print("Failed to write LiquidGlass cache to disk: \(error)")
+        let filePath = cacheDirectory.path!.appending("/\(key).png")
+        let fileURL = NSURL(fileURLWithPath: filePath)
+
+        if let data = uiImage.pngData() {
+            try! data.write(to: fileURL as URL)
         }
     }
 
-    
     func clear() {
         memoryCache.removeAllObjects()
-        try? fileManager.removeItem(at: cacheDirectory)
-        try? fileManager.createDirectory(at: cacheDirectory, withIntermediateDirectories: true)
+        do {
+            try fileManager.removeItem(at: cacheDirectory as URL)
+            try fileManager.createDirectory(at: cacheDirectory as URL, withIntermediateDirectories: true, attributes: nil)
+        } catch {
+            print("Failed to clear LiquidGlass cache: \(error)")
+        }
     }
 }
