@@ -175,20 +175,14 @@ public class LiquidGlassView: UIView {
         diffractionLayer.frame = bounds.insetBy(dx: inset, dy: inset)
         
         
-        let tempLayer = CALayer()
-            tempLayer.frame = bounds
-            tempLayer.addSublayer(tintOverlay)
-            tempLayer.addSublayer(darkenFalloffLayer)
-            tempLayer.addSublayer(cornerHighlightLayer)
-            tempLayer.addSublayer(innerDepthLayer)
-            tempLayer.addSublayer(refractLayer)
-            tempLayer.addSublayer(rimLayer)
-            tempLayer.addSublayer(diffractionLayer)
+        
 
         // flatten all decoration layers into a single image
         UIGraphicsBeginImageContextWithOptions(bounds.size, false, UIScreen.main.scale)
         if let ctx = UIGraphicsGetCurrentContext() {
-            tempLayer.render(in: ctx)
+            for layer in layersToFlatten {
+                layer.render(in: ctx)
+            }
         }
         let flattenedImage = UIGraphicsGetImageFromCurrentImageContext()
         UIGraphicsEndImageContext()
