@@ -191,6 +191,10 @@ public class LiquidGlassView: UIView {
         if let blurView = blurView {
             blurView.frame = bounds
         }
+        
+        if let solidView = solidView {
+            solidView.frame = bounds
+        }
 
         // Position layers temporarily for flattening
         let inset: CGFloat = 2
