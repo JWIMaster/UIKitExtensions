@@ -66,13 +66,36 @@ public class LiquidGlassView: UIView {
         didSet {
             guard oldValue != disableBlur else { return }
 
-            // Remove the blur view if it exists
+            // Remove any existing blur view
             blurView?.removeFromSuperview()
+            blurView = nil
 
-            // Re-setup the view to reflect the new state
-            setupView()
+            // If disabling, optionally add solid fallback
+            if disableBlur {
+                if solidView == nil {
+                    let solid = UIView()
+                    solid.frame = bounds
+                    solid.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+                    solid.backgroundColor = UIColor(white: 0.2, alpha: 0.3) // optional tint
+                    addSubview(solid)
+                    solidView = solid
+                }
+            } else {
+                solidView?.removeFromSuperview()
+                solidView = nil
+
+                // Add blur view back
+                let blur = LFGlassView()
+                blur.snapshotTargetView = snapshotTargetView
+                blur.blurRadius = blurRadius
+                blur.frame = bounds
+                blur.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+                addSubview(blur)
+                blurView = blur
+            }
         }
     }
+
     
     // MARK: - Subviews
     public var blurView: LFGlassView?
