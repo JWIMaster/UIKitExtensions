@@ -40,6 +40,10 @@ public class LiquidGlassView: UIView {
     public var frameInterval: Int = 3 {
         didSet { blurView?.frameInterval = UInt(frameInterval) }
     }
+    
+    public var isLiveRendering: Bool = true {
+        didSet { blurView?.isLiveBlurring = isLiveRendering }
+    }
 
     public weak var snapshotTargetView: UIView? {
         didSet { blurView?.snapshotTargetView = snapshotTargetView }
