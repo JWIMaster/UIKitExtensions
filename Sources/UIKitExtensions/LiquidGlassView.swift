@@ -54,12 +54,19 @@ public class LiquidGlassView: UIView {
             tintOverlay.backgroundColor = tintColorForGlass.cgColor
         }
     }
+    
+    public var solidViewColour: UIColor = .clear {
+        didSet {
+            solidView?.backgroundColor = solidViewColour
+        }
+    }
 
     /// NEW: disable blur completely
     public var disableBlur: Bool = false
 
     // MARK: - Subviews
     public var blurView: LFGlassView?
+    public var solidView: UIView?
     private let tintOverlay = CALayer()
     private let cornerHighlightLayer = CAGradientLayer()
     private let darkenFalloffLayer = CAGradientLayer()
@@ -83,6 +90,8 @@ public class LiquidGlassView: UIView {
             blur.snapshotTargetView = snapshotTargetView
             blur.blurRadius = blurRadius
             blurView = blur
+        } else {
+            solidView = UIView()
         }
         setupView()
         setupLayers()
@@ -102,11 +111,11 @@ public class LiquidGlassView: UIView {
         layer.masksToBounds = false
         
         if disableBlur {
-            let solidView = UIView(frame: bounds)
-            solidView.backgroundColor = tintColorForGlass
-            solidView.layer.cornerRadius = cornerRadius
-            solidView.layer.masksToBounds = true
-            addSubview(solidView)
+            if let solidView = solidView {
+                solidView.layer.cornerRadius = cornerRadius
+                solidView.layer.masksToBounds = true
+                addSubview(solidView)
+            }
         } else if let blurView = blurView {
             blurView.isLiveBlurring = true
             blurView.layer.cornerRadius = cornerRadius
