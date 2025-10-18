@@ -92,11 +92,13 @@ public class LiquidGlassView: UIView {
         // configure decorative layers (as before)
         tintOverlay.backgroundColor = UIColor.blue.withAlphaComponent(0.05).cgColor
         tintOverlay.compositingFilter = "overlayBlendMode"
+        tintOverlay.cornerRadius = cornerRadius
 
         darkenFalloffLayer.colors = [UIColor.black.withAlphaComponent(0.22).cgColor, UIColor.clear.cgColor]
         darkenFalloffLayer.startPoint = CGPoint(x: 0.5, y: 1)
         darkenFalloffLayer.endPoint = CGPoint(x: 0.5, y: 0)
         darkenFalloffLayer.compositingFilter = "multiplyBlendMode"
+        darkenFalloffLayer.cornerRadius = cornerRadius
 
         cornerHighlightLayer.colors = [
             UIColor.white.withAlphaComponent(0.25).cgColor,
@@ -108,6 +110,7 @@ public class LiquidGlassView: UIView {
         cornerHighlightLayer.startPoint = CGPoint(x: 0, y: 0)
         cornerHighlightLayer.endPoint = CGPoint(x: 1, y: 1)
         cornerHighlightLayer.compositingFilter = "screenBlendMode"
+        cornerHighlightLayer.cornerRadius = cornerRadius
 
         innerDepthLayer.colors = [
             UIColor.black.withAlphaComponent(0.15).cgColor,
@@ -118,6 +121,7 @@ public class LiquidGlassView: UIView {
         innerDepthLayer.startPoint = CGPoint(x: 0.5, y: 1)
         innerDepthLayer.endPoint = CGPoint(x: 0.5, y: 0)
         innerDepthLayer.compositingFilter = "softLightBlendMode"
+        innerDepthLayer.cornerRadius = cornerRadius
 
         refractLayer.colors = [
             UIColor.white.withAlphaComponent(0.05).cgColor,
@@ -128,18 +132,22 @@ public class LiquidGlassView: UIView {
         refractLayer.startPoint = CGPoint(x: 0, y: 0)
         refractLayer.endPoint = CGPoint(x: 1, y: 1)
         refractLayer.compositingFilter = "differenceBlendMode"
+        refractLayer.cornerRadius = cornerRadius
 
         rimLayer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
         rimLayer.borderWidth = 0.8
+        rimLayer.cornerRadius = cornerRadius
 
         diffractionLayer.backgroundColor = UIColor.white.withAlphaComponent(0.03).cgColor
         diffractionLayer.compositingFilter = "differenceBlendMode"
+        diffractionLayer.cornerRadius = cornerRadius - 1
 
         // add flattened composite holder
         layer.addSublayer(flattenedDecorLayer)
 
         updateCornersAndShadow()
     }
+
 
     // MARK: - Layout
     public override func layoutSubviews() {
