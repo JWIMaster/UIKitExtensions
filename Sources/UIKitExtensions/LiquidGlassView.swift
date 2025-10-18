@@ -20,8 +20,8 @@ public class LiquidGlassView: UIView {
     public var shadowColor: CGColor = UIColor.black.cgColor {
         didSet { updateCornersAndShadow() }
     }
-    
-    public var shadowOffset: CGSize = CGSize(width: 0, height: 0) {
+
+    public var shadowOffset: CGSize = .zero {
         didSet { updateCornersAndShadow() }
     }
 
@@ -54,6 +54,7 @@ public class LiquidGlassView: UIView {
     private let refractLayer = CAGradientLayer()
     private let rimLayer = CALayer()
     private let diffractionLayer = CALayer()
+    private let flattenedDecorLayer = CALayer()   // <- new flattened composite layer
 
     private var saturationFilter: GPUImageSaturationFilter?
 
@@ -88,27 +89,15 @@ public class LiquidGlassView: UIView {
     }
 
     private func setupLayers() {
-        // Bluish tint
+        // configure decorative layers (as before)
         tintOverlay.backgroundColor = UIColor.blue.withAlphaComponent(0.05).cgColor
         tintOverlay.compositingFilter = "overlayBlendMode"
-        tintOverlay.cornerRadius = cornerRadius
-        tintOverlay.masksToBounds = true
-        tintOverlay.shouldRasterize = true
-        tintOverlay.rasterizationScale = UIScreen.main.scale
-        layer.addSublayer(tintOverlay)
 
-        // Darken edges
         darkenFalloffLayer.colors = [UIColor.black.withAlphaComponent(0.22).cgColor, UIColor.clear.cgColor]
         darkenFalloffLayer.startPoint = CGPoint(x: 0.5, y: 1)
         darkenFalloffLayer.endPoint = CGPoint(x: 0.5, y: 0)
         darkenFalloffLayer.compositingFilter = "multiplyBlendMode"
-        darkenFalloffLayer.cornerRadius = cornerRadius
-        darkenFalloffLayer.masksToBounds = true
-        darkenFalloffLayer.shouldRasterize = true
-        darkenFalloffLayer.rasterizationScale = UIScreen.main.scale
-        layer.addSublayer(darkenFalloffLayer)
 
-        // Corner highlights
         cornerHighlightLayer.colors = [
             UIColor.white.withAlphaComponent(0.25).cgColor,
             UIColor.clear.cgColor,
@@ -119,13 +108,7 @@ public class LiquidGlassView: UIView {
         cornerHighlightLayer.startPoint = CGPoint(x: 0, y: 0)
         cornerHighlightLayer.endPoint = CGPoint(x: 1, y: 1)
         cornerHighlightLayer.compositingFilter = "screenBlendMode"
-        cornerHighlightLayer.cornerRadius = cornerRadius
-        cornerHighlightLayer.masksToBounds = true
-        cornerHighlightLayer.shouldRasterize = true
-        cornerHighlightLayer.rasterizationScale = UIScreen.main.scale
-        layer.addSublayer(cornerHighlightLayer)
 
-        // Inner depth gradient
         innerDepthLayer.colors = [
             UIColor.black.withAlphaComponent(0.15).cgColor,
             UIColor.clear.cgColor,
@@ -135,13 +118,7 @@ public class LiquidGlassView: UIView {
         innerDepthLayer.startPoint = CGPoint(x: 0.5, y: 1)
         innerDepthLayer.endPoint = CGPoint(x: 0.5, y: 0)
         innerDepthLayer.compositingFilter = "softLightBlendMode"
-        innerDepthLayer.cornerRadius = cornerRadius
-        innerDepthLayer.masksToBounds = true
-        innerDepthLayer.shouldRasterize = true
-        innerDepthLayer.rasterizationScale = UIScreen.main.scale
-        layer.addSublayer(innerDepthLayer)
 
-        // Refractive rim
         refractLayer.colors = [
             UIColor.white.withAlphaComponent(0.05).cgColor,
             UIColor.clear.cgColor,
@@ -151,41 +128,36 @@ public class LiquidGlassView: UIView {
         refractLayer.startPoint = CGPoint(x: 0, y: 0)
         refractLayer.endPoint = CGPoint(x: 1, y: 1)
         refractLayer.compositingFilter = "differenceBlendMode"
-        refractLayer.cornerRadius = cornerRadius
-        refractLayer.masksToBounds = true
-        refractLayer.shouldRasterize = true
-        refractLayer.rasterizationScale = UIScreen.main.scale
-        layer.addSublayer(refractLayer)
 
-        // Outer rim
         rimLayer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
         rimLayer.borderWidth = 0.8
-        rimLayer.cornerRadius = cornerRadius
-        rimLayer.masksToBounds = true
-        rimLayer.shouldRasterize = true
-        rimLayer.rasterizationScale = UIScreen.main.scale
-        layer.addSublayer(rimLayer)
 
-        // Diffraction
         diffractionLayer.backgroundColor = UIColor.white.withAlphaComponent(0.03).cgColor
         diffractionLayer.compositingFilter = "differenceBlendMode"
-        diffractionLayer.cornerRadius = cornerRadius - 1
-        diffractionLayer.masksToBounds = true
-        diffractionLayer.shouldRasterize = true
-        diffractionLayer.rasterizationScale = UIScreen.main.scale
-        layer.addSublayer(diffractionLayer)
 
-        // Update shadows and corners
+        // add flattened composite holder
+        layer.addSublayer(flattenedDecorLayer)
+
         updateCornersAndShadow()
     }
-
-
 
     // MARK: - Layout
     public override func layoutSubviews() {
         super.layoutSubviews()
         blurView.frame = bounds
+
+        // Position all layers temporarily for flattening
         let inset: CGFloat = 2
+        let layersToFlatten: [CALayer] = [
+            tintOverlay,
+            darkenFalloffLayer,
+            cornerHighlightLayer,
+            innerDepthLayer,
+            refractLayer,
+            rimLayer,
+            diffractionLayer
+        ]
+
         tintOverlay.frame = bounds
         darkenFalloffLayer.frame = bounds
         cornerHighlightLayer.frame = bounds
@@ -193,11 +165,27 @@ public class LiquidGlassView: UIView {
         refractLayer.frame = bounds.insetBy(dx: bounds.width * 0.05, dy: bounds.height * 0.05)
         rimLayer.frame = bounds
         diffractionLayer.frame = bounds.insetBy(dx: inset, dy: inset)
+
+        // flatten all decoration layers into a single image
+        UIGraphicsBeginImageContextWithOptions(bounds.size, false, UIScreen.main.scale)
+        if let ctx = UIGraphicsGetCurrentContext() {
+            for layer in layersToFlatten {
+                layer.render(in: ctx)
+            }
+        }
+        let flattenedImage = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+
+        flattenedDecorLayer.contents = flattenedImage?.cgImage
+        flattenedDecorLayer.frame = bounds
+        flattenedDecorLayer.cornerRadius = cornerRadius
+        flattenedDecorLayer.masksToBounds = true
+
+        // apply shadow
         layer.shadowPath = UIBezierPath(
-            roundedRect: blurView.frame,
-            cornerRadius: blurView.layer.cornerRadius*0.85
+            roundedRect: bounds,
+            cornerRadius: cornerRadius * 0.85
         ).cgPath
-        updateLayerCorners()
     }
 
     private func updateCornersAndShadow() {
@@ -206,16 +194,8 @@ public class LiquidGlassView: UIView {
         layer.shadowOpacity = shadowOpacity
         layer.shadowRadius = shadowRadius
         layer.shadowOffset = shadowOffset
-
-        updateLayerCorners()
         blurView.layer.cornerRadius = cornerRadius
-    }
-    
-
-    private func updateLayerCorners() {
-        tintOverlay.cornerRadius = cornerRadius
-        rimLayer.cornerRadius = cornerRadius
-        diffractionLayer.cornerRadius = cornerRadius - 1
+        flattenedDecorLayer.cornerRadius = cornerRadius
     }
 
     private func applySaturationBoost() {
