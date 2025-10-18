@@ -223,6 +223,7 @@ public class LiquidGlassView: UIView {
         let key = CacheKey(size: bounds.size, tint: tintColorForGlass)
         if let cached = LiquidGlassView.cachedImages[key] {
             flattenedDecorLayer.contents = cached
+            print("used cache")
         } else {
             let tempLayer = CALayer()
             layersToFlatten.forEach { tempLayer.addSublayer($0) }
