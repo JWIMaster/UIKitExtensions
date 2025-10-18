@@ -78,6 +78,7 @@ public class LiquidGlassView: UIView {
 
     private var saturationFilter: GPUImageSaturationFilter?
     
+    private static var cachedImages: [CacheKey: CGImage] = [:]
 
     // MARK: - Init
     public init(blurRadius: CGFloat = 12, cornerRadius: CGFloat = 50, snapshotTargetView: UIView?, disableBlur: Bool = false) {
@@ -219,13 +220,16 @@ public class LiquidGlassView: UIView {
         diffractionLayer.frame = bounds.insetBy(dx: inset, dy: inset)
 
         // flatten layers
-        let key = "\(Int(bounds.width))x\(Int(bounds.height))_\(tintColorForGlass.hexValue)"
-
-        if let cached = LiquidGlassCache.shared.image(forKey: key) {
+        let key = CacheKey(size: bounds.size, tint: tintColorForGlass)
+        if let cached = LiquidGlassView.cachedImages[key] {
             flattenedDecorLayer.contents = cached
+            print("used cache")
         } else {
             let tempLayer = CALayer()
             layersToFlatten.forEach { tempLayer.addSublayer($0) }
+
+            // recolour tint overlay before render
+            tintOverlay.backgroundColor = tintColorForGlass.cgColor
 
             UIGraphicsBeginImageContextWithOptions(bounds.size, false, UIScreen.main.scale)
             if let ctx = UIGraphicsGetCurrentContext() {
@@ -235,11 +239,10 @@ public class LiquidGlassView: UIView {
             UIGraphicsEndImageContext()
 
             if let img = img {
-                LiquidGlassCache.shared.store(img, forKey: key)
+                LiquidGlassView.cachedImages[key] = img
                 flattenedDecorLayer.contents = img
             }
         }
-
 
         flattenedDecorLayer.frame = bounds
         flattenedDecorLayer.cornerRadius = cornerRadius
@@ -300,66 +303,4 @@ fileprivate extension UIColor {
     }
 }
 
-final class LiquidGlassCache {
-    static let shared = LiquidGlassCache()
 
-    private let memoryCache = NSCache<NSString, UIImage>()
-    private let fileManager = FileManager.default
-    private let cacheDirectory: NSURL
-
-    private init() {
-        // Get Caches directory
-        let dirs = NSSearchPathForDirectoriesInDomains(.cachesDirectory, .userDomainMask, true)
-        let cachePath = dirs[0].appending("/LiquidGlassCache")
-        cacheDirectory = NSURL(fileURLWithPath: cachePath, isDirectory: true)
-
-        // Create folder if it doesn’t exist
-        if !fileManager.fileExists(atPath: cacheDirectory.path!) {
-            do {
-                try fileManager.createDirectory(at: cacheDirectory as URL, withIntermediateDirectories: true, attributes: nil)
-            } catch {
-                print("Failed to create LiquidGlass cache directory: \(error)")
-            }
-        }
-    }
-
-    func image(forKey key: String) -> CGImage? {
-        // Try memory cache first
-        if let mem = memoryCache.object(forKey: key as NSString) {
-            return mem.cgImage
-        }
-
-        // Try disk cache
-        let filePath = cacheDirectory.path!.appending("/\(key).png")
-        let fileURL = NSURL(fileURLWithPath: filePath)
-        if let data = NSData(contentsOf: fileURL as URL),
-           let uiImage = UIImage(data: data as Data) {
-            memoryCache.setObject(uiImage, forKey: key as NSString)
-            return uiImage.cgImage
-        }
-
-        return nil
-    }
-
-    func store(_ image: CGImage, forKey key: String) {
-        let uiImage = UIImage(cgImage: image)
-        memoryCache.setObject(uiImage, forKey: key as NSString)
-
-        let filePath = cacheDirectory.path!.appending("/\(key).png")
-        let fileURL = NSURL(fileURLWithPath: filePath)
-
-        if let data = uiImage.pngData() {
-            try! data.write(to: fileURL as URL)
-        }
-    }
-
-    func clear() {
-        memoryCache.removeAllObjects()
-        do {
-            try fileManager.removeItem(at: cacheDirectory as URL)
-            try fileManager.createDirectory(at: cacheDirectory as URL, withIntermediateDirectories: true, attributes: nil)
-        } catch {
-            print("Failed to clear LiquidGlass cache: \(error)")
-        }
-    }
-}
