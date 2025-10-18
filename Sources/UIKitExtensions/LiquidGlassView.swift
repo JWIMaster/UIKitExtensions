@@ -221,7 +221,7 @@ public class LiquidGlassView: UIView {
         let tempLayer = CALayer()
         layersToFlatten.forEach { tempLayer.addSublayer($0) }
 
-        UIGraphicsBeginImageContextWithOptions(bounds.size, false, UIScreen.main.scale)
+        UIGraphicsBeginImageContextWithOptions(bounds.size, false, UIScreen.main.scale*0.5)
         if let ctx = UIGraphicsGetCurrentContext() {
             tempLayer.render(in: ctx)
         }
