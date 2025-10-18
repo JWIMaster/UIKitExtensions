@@ -78,7 +78,7 @@ public class LiquidGlassView: UIView {
 
     private var saturationFilter: GPUImageSaturationFilter?
     
-    private static var cachedImages: [SizeKey: CGImage] = [:]
+    private static var cachedImages: [CacheKey: CGImage] = [:]
 
     // MARK: - Init
     public init(blurRadius: CGFloat = 12, cornerRadius: CGFloat = 50, snapshotTargetView: UIView?, disableBlur: Bool = false) {
@@ -220,12 +220,15 @@ public class LiquidGlassView: UIView {
         diffractionLayer.frame = bounds.insetBy(dx: inset, dy: inset)
 
         // flatten layers
-        let key = SizeKey(bounds.size)
+        let key = CacheKey(size: bounds.size, tint: tintColorForGlass)
         if let cached = LiquidGlassView.cachedImages[key] {
             flattenedDecorLayer.contents = cached
         } else {
             let tempLayer = CALayer()
             layersToFlatten.forEach { tempLayer.addSublayer($0) }
+
+            // recolour tint overlay before render
+            tintOverlay.backgroundColor = tintColorForGlass.cgColor
 
             UIGraphicsBeginImageContextWithOptions(bounds.size, false, UIScreen.main.scale)
             if let ctx = UIGraphicsGetCurrentContext() {
@@ -240,14 +243,10 @@ public class LiquidGlassView: UIView {
             }
         }
 
-
-
-        //flattenedDecorLayer.contents = flattenedImage?.cgImage
         flattenedDecorLayer.frame = bounds
         flattenedDecorLayer.cornerRadius = cornerRadius
         flattenedDecorLayer.masksToBounds = true
 
-        // apply shadow
         layer.shadowPath = UIBezierPath(
             roundedRect: bounds,
             cornerRadius: cornerRadius * 0.85
@@ -276,13 +275,29 @@ public class LiquidGlassView: UIView {
 }
 
 
-fileprivate struct SizeKey: Hashable {
+fileprivate struct CacheKey: Hashable {
     let width: CGFloat
     let height: CGFloat
+    let tintHex: UInt32
     
-    init(_ size: CGSize) {
-        // Round to 2 decimal places to avoid float noise
+    init(size: CGSize, tint: UIColor) {
         width = (size.width * 100).rounded() / 100
         height = (size.height * 100).rounded() / 100
+        tintHex = tint.hexValue
+    }
+}
+
+fileprivate extension UIColor {
+    var hexValue: UInt32 {
+        var r: CGFloat = 0
+        var g: CGFloat = 0
+        var b: CGFloat = 0
+        var a: CGFloat = 0
+        getRed(&r, green: &g, blue: &b, alpha: &a)
+        let ri = UInt32(r * 255) << 24
+        let gi = UInt32(g * 255) << 16
+        let bi = UInt32(b * 255) << 8
+        let ai = UInt32(a * 255)
+        return ri | gi | bi | ai
     }
 }
