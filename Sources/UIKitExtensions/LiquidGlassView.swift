@@ -62,7 +62,17 @@ public class LiquidGlassView: UIView {
     }
     
     /// NEW: disable blur completely
-    public var disableBlur: Bool = false
+    public var disableBlur: Bool = false {
+        didSet {
+            guard oldValue != disableBlur else { return }
+
+            // Remove the blur view if it exists
+            blurView?.removeFromSuperview()
+
+            // Re-setup the view to reflect the new state
+            setupView()
+        }
+    }
     
     // MARK: - Subviews
     public var blurView: LFGlassView?
