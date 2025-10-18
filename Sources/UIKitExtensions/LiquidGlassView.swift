@@ -48,6 +48,12 @@ public class LiquidGlassView: UIView {
     public weak var snapshotTargetView: UIView? {
         didSet { blurView?.snapshotTargetView = snapshotTargetView }
     }
+    
+    public var tintColorForGlass: UIColor = UIColor.blue.withAlphaComponent(0.05) {
+        didSet {
+            tintOverlay.backgroundColor = tintColorForGlass.cgColor
+        }
+    }
 
     /// NEW: disable blur completely
     public var disableBlur: Bool = false
