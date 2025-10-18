@@ -13,7 +13,7 @@ public class LiquidGlassView: UIView {
         didSet { updateCornersAndShadow() }
     }
 
-    public var shadowRadius: CGFloat = 30 {
+    public var shadowRadius: CGFloat = 12 {
         didSet { updateCornersAndShadow() }
     }
 
