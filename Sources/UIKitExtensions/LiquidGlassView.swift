@@ -171,6 +171,7 @@ public class LiquidGlassView: UIView {
     public override func layoutSubviews() {
         super.layoutSubviews()
         blurView.frame = bounds
+        flattenedDecorLayer.frame = bounds
         let inset: CGFloat = 2
         tintOverlay.frame = bounds
         darkenFalloffLayer.frame = bounds
