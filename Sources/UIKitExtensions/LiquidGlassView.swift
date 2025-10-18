@@ -53,7 +53,7 @@ public class LiquidGlassView: UIView {
     public var disableBlur: Bool = false
 
     // MARK: - Subviews
-    private var blurView: LFGlassView?
+    public var blurView: LFGlassView?
     private let tintOverlay = CALayer()
     private let cornerHighlightLayer = CAGradientLayer()
     private let darkenFalloffLayer = CAGradientLayer()
