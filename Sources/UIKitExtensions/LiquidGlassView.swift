@@ -201,7 +201,7 @@ public class LiquidGlassView: UIView {
         let inset: CGFloat = 2
         let layersToFlatten: [CALayer] = [
             tintOverlay,
-            //darkenFalloffLayer,
+            darkenFalloffLayer,
             cornerHighlightLayer,
             innerDepthLayer,
             //refractLayer,
