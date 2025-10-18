@@ -93,6 +93,8 @@ public class LiquidGlassView: UIView {
         tintOverlay.compositingFilter = "overlayBlendMode"
         tintOverlay.cornerRadius = cornerRadius
         tintOverlay.masksToBounds = true
+        tintOverlay.shouldRasterize = true
+        tintOverlay.rasterizationScale = UIScreen.main.scale
         layer.addSublayer(tintOverlay)
 
         // Darken edges
@@ -102,6 +104,8 @@ public class LiquidGlassView: UIView {
         darkenFalloffLayer.compositingFilter = "multiplyBlendMode"
         darkenFalloffLayer.cornerRadius = cornerRadius
         darkenFalloffLayer.masksToBounds = true
+        darkenFalloffLayer.shouldRasterize = true
+        darkenFalloffLayer.rasterizationScale = UIScreen.main.scale
         layer.addSublayer(darkenFalloffLayer)
 
         // Corner highlights
@@ -117,6 +121,8 @@ public class LiquidGlassView: UIView {
         cornerHighlightLayer.compositingFilter = "screenBlendMode"
         cornerHighlightLayer.cornerRadius = cornerRadius
         cornerHighlightLayer.masksToBounds = true
+        cornerHighlightLayer.shouldRasterize = true
+        cornerHighlightLayer.rasterizationScale = UIScreen.main.scale
         layer.addSublayer(cornerHighlightLayer)
 
         // Inner depth gradient
@@ -131,6 +137,8 @@ public class LiquidGlassView: UIView {
         innerDepthLayer.compositingFilter = "softLightBlendMode"
         innerDepthLayer.cornerRadius = cornerRadius
         innerDepthLayer.masksToBounds = true
+        innerDepthLayer.shouldRasterize = true
+        innerDepthLayer.rasterizationScale = UIScreen.main.scale
         layer.addSublayer(innerDepthLayer)
 
         // Refractive rim
@@ -145,6 +153,8 @@ public class LiquidGlassView: UIView {
         refractLayer.compositingFilter = "differenceBlendMode"
         refractLayer.cornerRadius = cornerRadius
         refractLayer.masksToBounds = true
+        refractLayer.shouldRasterize = true
+        refractLayer.rasterizationScale = UIScreen.main.scale
         layer.addSublayer(refractLayer)
 
         // Outer rim
@@ -152,6 +162,8 @@ public class LiquidGlassView: UIView {
         rimLayer.borderWidth = 0.8
         rimLayer.cornerRadius = cornerRadius
         rimLayer.masksToBounds = true
+        rimLayer.shouldRasterize = true
+        rimLayer.rasterizationScale = UIScreen.main.scale
         layer.addSublayer(rimLayer)
 
         // Diffraction
@@ -159,10 +171,14 @@ public class LiquidGlassView: UIView {
         diffractionLayer.compositingFilter = "differenceBlendMode"
         diffractionLayer.cornerRadius = cornerRadius - 1
         diffractionLayer.masksToBounds = true
+        diffractionLayer.shouldRasterize = true
+        diffractionLayer.rasterizationScale = UIScreen.main.scale
         layer.addSublayer(diffractionLayer)
 
+        // Update shadows and corners
         updateCornersAndShadow()
     }
+
 
 
     // MARK: - Layout
