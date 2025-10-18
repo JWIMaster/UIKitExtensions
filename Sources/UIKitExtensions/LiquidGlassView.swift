@@ -100,8 +100,14 @@ public class LiquidGlassView: UIView {
     private func setupView() {
         clipsToBounds = true
         layer.masksToBounds = false
-
-        if let blurView = blurView {
+        
+        if disableBlur {
+            let solidView = UIView(frame: bounds)
+            solidView.backgroundColor = tintColorForGlass
+            solidView.layer.cornerRadius = cornerRadius
+            solidView.layer.masksToBounds = true
+            addSubview(solidView)
+        } else if let blurView = blurView {
             blurView.isLiveBlurring = true
             blurView.layer.cornerRadius = cornerRadius
             blurView.layer.masksToBounds = true
