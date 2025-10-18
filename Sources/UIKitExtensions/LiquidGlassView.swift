@@ -77,6 +77,8 @@ public class LiquidGlassView: UIView {
     private let flattenedDecorLayer = CALayer()   // flattened composite layer
 
     private var saturationFilter: GPUImageSaturationFilter?
+    
+    private static var cachedImages: [SizeKey: CGImage] = [:]
 
     // MARK: - Init
     public init(blurRadius: CGFloat = 12, cornerRadius: CGFloat = 50, snapshotTargetView: UIView?, disableBlur: Bool = false) {
@@ -218,17 +220,29 @@ public class LiquidGlassView: UIView {
         diffractionLayer.frame = bounds.insetBy(dx: inset, dy: inset)
 
         // flatten layers
-        let tempLayer = CALayer()
-        layersToFlatten.forEach { tempLayer.addSublayer($0) }
+        let key = SizeKey(bounds.size)
+        if let cached = LiquidGlassView.cachedImages[key] {
+            flattenedDecorLayer.contents = cached
+        } else {
+            let tempLayer = CALayer()
+            layersToFlatten.forEach { tempLayer.addSublayer($0) }
 
-        UIGraphicsBeginImageContextWithOptions(bounds.size, false, UIScreen.main.scale)
-        if let ctx = UIGraphicsGetCurrentContext() {
-            tempLayer.render(in: ctx)
+            UIGraphicsBeginImageContextWithOptions(bounds.size, false, UIScreen.main.scale)
+            if let ctx = UIGraphicsGetCurrentContext() {
+                tempLayer.render(in: ctx)
+            }
+            let img = UIGraphicsGetImageFromCurrentImageContext()?.cgImage
+            UIGraphicsEndImageContext()
+
+            if let img = img {
+                LiquidGlassView.cachedImages[key] = img
+                flattenedDecorLayer.contents = img
+            }
         }
-        let flattenedImage = UIGraphicsGetImageFromCurrentImageContext()
-        UIGraphicsEndImageContext()
 
-        flattenedDecorLayer.contents = flattenedImage?.cgImage
+
+
+        //flattenedDecorLayer.contents = flattenedImage?.cgImage
         flattenedDecorLayer.frame = bounds
         flattenedDecorLayer.cornerRadius = cornerRadius
         flattenedDecorLayer.masksToBounds = true
@@ -258,5 +272,17 @@ public class LiquidGlassView: UIView {
         saturationFilter = GPUImageSaturationFilter()
         saturationFilter?.saturation = saturationBoost
         #endif
+    }
+}
+
+
+fileprivate struct SizeKey: Hashable {
+    let width: CGFloat
+    let height: CGFloat
+    
+    init(_ size: CGSize) {
+        // Round to 2 decimal places to avoid float noise
+        width = (size.width * 100).rounded() / 100
+        height = (size.height * 100).rounded() / 100
     }
 }
