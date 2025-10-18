@@ -202,11 +202,11 @@ public class LiquidGlassView: UIView {
         let layersToFlatten: [CALayer] = [
             tintOverlay,
             darkenFalloffLayer,
-            cornerHighlightLayer,
+            //cornerHighlightLayer,
             innerDepthLayer,
-            refractLayer,
-            rimLayer,
-            diffractionLayer
+            //refractLayer,
+            rimLayer
+            //diffractionLayer
         ]
 
         tintOverlay.frame = bounds
@@ -221,7 +221,7 @@ public class LiquidGlassView: UIView {
         let tempLayer = CALayer()
         layersToFlatten.forEach { tempLayer.addSublayer($0) }
 
-        UIGraphicsBeginImageContextWithOptions(bounds.size, false, UIScreen.main.scale*0.5)
+        UIGraphicsBeginImageContextWithOptions(bounds.size, false, UIScreen.main.scale)
         if let ctx = UIGraphicsGetCurrentContext() {
             tempLayer.render(in: ctx)
         }
