@@ -261,8 +261,8 @@ public class LiquidGlassView: UIView {
         layer.shadowOpacity = shadowOpacity
         layer.shadowRadius = shadowRadius
         layer.shadowOffset = shadowOffset
-        layer.shouldRasterize = true
-        layer.rasterizationScale = UIScreen.main.scale
+        //layer.shouldRasterize = true
+        //layer.rasterizationScale = UIScreen.main.scale
         solidView?.layer.cornerRadius = cornerRadius
         blurView?.layer.cornerRadius = cornerRadius
         flattenedDecorLayer.cornerRadius = cornerRadius
