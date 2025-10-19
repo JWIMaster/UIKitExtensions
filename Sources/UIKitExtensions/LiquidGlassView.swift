@@ -249,10 +249,10 @@ public class LiquidGlassView: UIView {
         flattenedDecorLayer.cornerRadius = cornerRadius
         flattenedDecorLayer.masksToBounds = true
         
-        layer.shadowPath = UIBezierPath(
+        /*layer.shadowPath = UIBezierPath(
             roundedRect: bounds,
             cornerRadius: cornerRadius * 0.85
-        ).cgPath
+        ).cgPath*/
     }
     
     private func updateCornersAndShadow() {
@@ -261,8 +261,8 @@ public class LiquidGlassView: UIView {
         layer.shadowOpacity = shadowOpacity
         layer.shadowRadius = shadowRadius
         layer.shadowOffset = shadowOffset
-        //layer.shouldRasterize = true
-        //layer.rasterizationScale = UIScreen.main.scale
+        layer.shouldRasterize = true
+        layer.rasterizationScale = UIScreen.main.scale
         solidView?.layer.cornerRadius = cornerRadius
         blurView?.layer.cornerRadius = cornerRadius
         flattenedDecorLayer.cornerRadius = cornerRadius
