@@ -220,39 +220,71 @@ public class LiquidGlassView: UIView {
         diffractionLayer.frame = bounds.insetBy(dx: inset, dy: inset)
         
         // flatten layers
+        // MARK: - Flatten with shadow
+
         let colorKey = tintOverlay.backgroundColor.map { UIColor(cgColor: $0).hexValue } ?? 0
-        let key = "\(Int(bounds.width))x\(Int(bounds.height))_\(colorKey)"
-        
+        let key = "\(Int(bounds.width))x\(Int(bounds.height))_\(colorKey)_shadow_\(Int(shadowRadius))_\(Int(shadowOpacity * 100))"
+
         if let cached = LiquidGlassCache.load(for: key) {
             flattenedDecorLayer.contents = cached
-            print("used cache")
+            print("used cached glass with shadow")
         } else {
-            // Flatten layers
+            // Create temp layer for flattening
             let tempLayer = CALayer()
             layersToFlatten.forEach { tempLayer.addSublayer($0) }
-            
-            UIGraphicsBeginImageContextWithOptions(bounds.size, false, UIScreen.main.scale)
-            if let ctx = UIGraphicsGetCurrentContext() {
-                tempLayer.render(in: ctx)
-            }
+
+            // Calculate canvas size for shadow
+            let shadowInset = shadowRadius * 2
+            let canvasSize = CGSize(
+                width: bounds.width + shadowInset * 2,
+                height: bounds.height + shadowInset * 2
+            )
+
+            UIGraphicsBeginImageContextWithOptions(canvasSize, false, UIScreen.main.scale)
+            guard let ctx = UIGraphicsGetCurrentContext() else { return }
+
+            // Draw shadow first
+            ctx.saveGState()
+            ctx.setShadow(
+                offset: shadowOffset,
+                blur: shadowRadius,
+                color: shadowColor.copy(alpha: CGFloat(shadowOpacity))
+            )
+            let shadowPath = UIBezierPath(
+                roundedRect: CGRect(
+                    x: shadowInset,
+                    y: shadowInset,
+                    width: bounds.width,
+                    height: bounds.height
+                ),
+                cornerRadius: cornerRadius
+            )
+            UIColor.black.setFill()
+            ctx.addPath(shadowPath.cgPath)
+            ctx.fillPath()
+            ctx.restoreGState()
+
+            // Render decorative layers on top (inside the same shadowed frame)
+            ctx.translateBy(x: shadowInset, y: shadowInset)
+            tempLayer.render(in: ctx)
+
             let flattenedImage = UIGraphicsGetImageFromCurrentImageContext()?.cgImage
             UIGraphicsEndImageContext()
-            
+
             if let img = flattenedImage {
-                LiquidGlassCache.store(img, for: key) // crashes if writing fails
+                LiquidGlassCache.store(img, for: key)
                 flattenedDecorLayer.contents = img
             }
         }
-        
-        
+
+        // Fit flattened layer within the view’s bounds
         flattenedDecorLayer.frame = bounds
         flattenedDecorLayer.cornerRadius = cornerRadius
-        flattenedDecorLayer.masksToBounds = true
+        flattenedDecorLayer.masksToBounds = false
+
         
-        layer.shadowPath = UIBezierPath(
-            roundedRect: bounds,
-            cornerRadius: cornerRadius * 0.85
-        ).cgPath
+        
+        
     }
     
     private func updateCornersAndShadow() {
@@ -303,7 +335,6 @@ fileprivate extension UIColor {
         return ri | gi | bi | ai
     }
 }
-
 
 public class LiquidGlassCache {
     // Shared memory cache
