@@ -357,22 +357,5 @@ public class LiquidGlassCache {
         return nil
     }
     
-    public static func wipe() {
-        // Clear memory cache
-        memoryCache.removeAllObjects()
-        
-        // Clear disk cache
-        let fileManager = FileManager.default
-        let cacheURL = URL(fileURLWithPath: cacheDirectory)
-        
-        if let files = try? fileManager.contentsOfDirectory(atPath: cacheDirectory) {
-            for file in files {
-                // Only remove .png files we stored
-                if file.hasSuffix(".png") {
-                    let fileURL = cacheURL.appendingPathComponent(file)
-                    try? fileManager.removeItem(at: fileURL)
-                }
-            }
-        }
-    }
+    
 }
