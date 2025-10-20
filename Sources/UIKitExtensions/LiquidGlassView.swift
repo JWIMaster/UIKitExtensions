@@ -225,7 +225,6 @@ public class LiquidGlassView: UIView {
         
         if let cached = LiquidGlassCache.load(for: key) {
             flattenedDecorLayer.contents = cached
-            print("used cache")
         } else {
             // Flatten layers
             let tempLayer = CALayer()
