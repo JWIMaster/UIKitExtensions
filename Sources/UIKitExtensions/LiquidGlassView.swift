@@ -1,6 +1,7 @@
 import UIKit
 import GPUImage1Swift
 import LiveFrost
+import FoundationCompatKit
 
 public class LiquidGlassView: UIView {
     
@@ -79,6 +80,7 @@ public class LiquidGlassView: UIView {
     private var saturationFilter: GPUImageSaturationFilter?
     
     private static var cachedImages: [CacheKey: CGImage] = [:]
+    //private let flattenQueue = DispatchQueue(label: "com.jwi.liquidglass.flatten", qos: .userInitiated)
     
     // MARK: - Init
     public init(blurRadius: CGFloat = 12, cornerRadius: CGFloat = 50, snapshotTargetView: UIView?, disableBlur: Bool = false) {
@@ -226,20 +228,24 @@ public class LiquidGlassView: UIView {
         if let cached = LiquidGlassCache.load(for: key) {
             flattenedDecorLayer.contents = cached
         } else {
-            // Flatten layers
-            let tempLayer = CALayer()
-            layersToFlatten.forEach { tempLayer.addSublayer($0) }
-            
-            UIGraphicsBeginImageContextWithOptions(bounds.size, false, UIScreen.main.scale)
-            if let ctx = UIGraphicsGetCurrentContext() {
-                tempLayer.render(in: ctx)
-            }
-            let flattenedImage = UIGraphicsGetImageFromCurrentImageContext()?.cgImage
-            UIGraphicsEndImageContext()
-            
-            if let img = flattenedImage {
-                LiquidGlassCache.store(img, for: key) // crashes if writing fails
-                flattenedDecorLayer.contents = img
+            DispatchQueue.global(qos: .userInitiated).async { [self] in
+                let tempLayer = CALayer()
+                layersToFlatten.forEach { tempLayer.addSublayer($0) }
+                
+                UIGraphicsBeginImageContextWithOptions(bounds.size, false, UIScreen.main.scale)
+                if let ctx = UIGraphicsGetCurrentContext() {
+                    tempLayer.render(in: ctx)
+                }
+                let flattenedImage = UIGraphicsGetImageFromCurrentImageContext()?.cgImage
+                UIGraphicsEndImageContext()
+                
+                if let img = flattenedImage {
+                    LiquidGlassCache.store(img, for: key) // crashes if writing fails
+                    
+                    DispatchQueue.main.async {
+                        flattenedDecorLayer.contents = img
+                    }
+                }
             }
         }
         
