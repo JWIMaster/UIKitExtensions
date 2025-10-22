@@ -224,25 +224,37 @@ public class LiquidGlassView: UIView {
         let colorKey = tintOverlay.backgroundColor.map { UIColor(cgColor: $0).hexValue } ?? 0
         let key = "\(Int(bounds.width))x\(Int(bounds.height))_\(colorKey)"
         
-        if let cached = LiquidGlassCache.load(for: key) {
-            flattenedDecorLayer.contents = cached
-        } else {
-            // Flatten layers
-            let tempLayer = CALayer()
-            layersToFlatten.forEach { tempLayer.addSublayer($0) }
-            
-            UIGraphicsBeginImageContextWithOptions(bounds.size, false, UIScreen.main.scale)
-            if let ctx = UIGraphicsGetCurrentContext() {
-                tempLayer.render(in: ctx)
-            }
-            let flattenedImage = UIGraphicsGetImageFromCurrentImageContext()?.cgImage
-            UIGraphicsEndImageContext()
-            
-            if let img = flattenedImage {
-                LiquidGlassCache.store(img, for: key) // crashes if writing fails
-                flattenedDecorLayer.contents = img
+        LiquidGlassCache.loadAsync(for: key) { [weak self] cached in
+            guard let self = self else { return }
+
+            if let cached = cached {
+                // Cached image found
+                self.flattenedDecorLayer.contents = cached
+            } else {
+                // Flatten layers on a background thread
+                DispatchQueue.global(qos: .userInitiated).async {
+                    let tempLayer = CALayer()
+                    layersToFlatten.forEach { tempLayer.addSublayer($0) }
+
+                    UIGraphicsBeginImageContextWithOptions(self.bounds.size, false, UIScreen.main.scale)
+                    if let ctx = UIGraphicsGetCurrentContext() {
+                        tempLayer.render(in: ctx)
+                    }
+                    let flattenedImage = UIGraphicsGetImageFromCurrentImageContext()?.cgImage
+                    UIGraphicsEndImageContext()
+
+                    if let img = flattenedImage {
+                        LiquidGlassCache.store(img, for: key)
+                        
+                        // Update UI back on the main thread
+                        DispatchQueue.main.async {
+                            self.flattenedDecorLayer.contents = img
+                        }
+                    }
+                }
             }
         }
+
         
         
         flattenedDecorLayer.frame = bounds
@@ -357,5 +369,27 @@ public class LiquidGlassCache {
         return nil
     }
     
-    
+    public static func loadAsync(for key: String, completion: @escaping (CGImage?) -> Void) {
+        // Memory cache first
+        if let cached = memoryCache.object(forKey: key as NSString) {
+            completion(cached)
+            return
+        }
+        
+        DispatchQueue.global(qos: .userInitiated).async {
+            let url = filePath(forKey: key)
+            var image: CGImage? = nil
+            if let data = try? Data(contentsOf: url),
+               let uiImage = UIImage(data: data) {
+                image = uiImage.cgImage
+                if let img = image {
+                    memoryCache.setObject(img, forKey: key as NSString)
+                }
+            }
+            
+            DispatchQueue.main.async {
+                completion(image)
+            }
+        }
+    }
 }
