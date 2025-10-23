@@ -270,20 +270,6 @@ public class LiquidGlassView: UIView {
     
     deinit {
         print("BYE LAYER")
-        //releaseBlur()
-    }
-    
-    func releaseBlur() {
-        flattenedDecorLayer.contents = nil
-        flattenedDecorLayer.removeFromSuperlayer()
-        tintOverlay.removeFromSuperlayer()
-        darkenFalloffLayer.removeFromSuperlayer()
-        cornerHighlightLayer.removeFromSuperlayer()
-        innerDepthLayer.removeFromSuperlayer()
-        refractLayer.removeFromSuperlayer()
-        rimLayer.removeFromSuperlayer()
-        diffractionLayer.removeFromSuperlayer()
-        CATransaction.flush()
     }
     
     private func applySaturationBoost() {
