@@ -268,6 +268,24 @@ public class LiquidGlassView: UIView {
         flattenedDecorLayer.cornerRadius = cornerRadius
     }
     
+    deinit {
+        print("BYE LAYER")
+        releaseBlur()
+    }
+    
+    func releaseBlur() {
+        flattenedDecorLayer.contents = nil
+        flattenedDecorLayer.removeFromSuperlayer()
+        tintOverlay.removeFromSuperlayer()
+        darkenFalloffLayer.removeFromSuperlayer()
+        cornerHighlightLayer.removeFromSuperlayer()
+        innerDepthLayer.removeFromSuperlayer()
+        refractLayer.removeFromSuperlayer()
+        rimLayer.removeFromSuperlayer()
+        diffractionLayer.removeFromSuperlayer()
+        CATransaction.flush()
+    }
+    
     private func applySaturationBoost() {
 #if canImport(GPUImage1Swift)
         saturationFilter = GPUImageSaturationFilter()
