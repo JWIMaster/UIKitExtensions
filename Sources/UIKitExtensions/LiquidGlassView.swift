@@ -270,7 +270,7 @@ public class LiquidGlassView: UIView {
     
     deinit {
         print("BYE LAYER")
-        releaseBlur()
+        //releaseBlur()
     }
     
     func releaseBlur() {
