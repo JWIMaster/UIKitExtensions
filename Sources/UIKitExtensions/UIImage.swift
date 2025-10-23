@@ -20,7 +20,6 @@ public extension UIImage {
     }
     
     func resizeImage(_ image: UIImage, targetSize: CGSize) -> UIImage {
-        print("resized")
         UIGraphicsBeginImageContextWithOptions(targetSize, false, 0.0)
         image.draw(in: CGRect(origin: .zero, size: targetSize))
         let newImage = UIGraphicsGetImageFromCurrentImageContext()
