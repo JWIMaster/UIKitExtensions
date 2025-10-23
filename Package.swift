@@ -25,6 +25,11 @@ let package = Package(
             name: "UIKitExtensions",
             dependencies: ["UIKitCompatKit", "FoundationCompatKit"],
             path: "Sources/UIKitExtensions"),
+        .target(
+            name: "iOS6BarFix",
+            dependencies: [],
+            path: "Sources/iOS6BarFix",
+            publicHeadersPath: "."),
         .testTarget(
             name: "UIKitExtensionsTests",
             dependencies: ["UIKitExtensions"]),
