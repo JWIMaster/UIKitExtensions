@@ -1,16 +1,40 @@
-import Foundation
+import UIKit
 import QuartzCore
 import ObjectiveC.runtime
 
-@objc public class CAFilter: NSObject {
-    
-    private let internalFilter: AnyObject
+@objc public class CAFilterWrapper: NSObject {
 
-    public var name: String {
-        get { internalFilter.value(forKey: "name") as? String ?? "" }
-        set { internalFilter.setValue(newValue, forKey: "name") }
+    // MARK: - Filter Types
+    @objc public enum FilterType: String, CaseIterable {
+        case multiplyColor = "multiplyColor"
+        case multiplyGradient = "multiplyGradient"
+        case gaussianBlur = "gaussianBlur"
+        case pageCurl = "pageCurl"
+        case fog = "fog"
+        case lighting = "lighting"
+        case clear = "clear"
+        case copy = "copy"
+        case sourceOver = "sourceOver"
+        case sourceIn = "sourceIn"
+        case sourceOut = "sourceOut"
+        case sourceAtop = "sourceAtop"
+        case destOver = "destOver"
+        case destIn = "destIn"
+        case destOut = "destOut"
+        case destAtop = "destAtop"
+        case xor = "xor"
+        case plusL = "plusL"
+        case multiply = "multiply"
+        case lanczos = "lanczos"
+        case linear = "linear"
+        case nearest = "nearest"
+        case trilinear = "trilinear"
     }
 
+    // MARK: - Private CAFilter instance
+    private let internalFilter: AnyObject
+
+    // MARK: - Public properties
     public var isEnabled: Bool {
         get { internalFilter.value(forKey: "enabled") as? Bool ?? true }
         set { internalFilter.setValue(newValue, forKey: "enabled") }
@@ -21,41 +45,32 @@ import ObjectiveC.runtime
         set { internalFilter.setValue(newValue, forKey: "cachesInputImage") }
     }
 
-    public var type: String {
-        return internalFilter.value(forKey: "type") as? String ?? ""
+    public var name: String {
+        get { internalFilter.value(forKey: "name") as? String ?? "" }
+        set { internalFilter.setValue(newValue, forKey: "name") }
     }
 
-    public init?(type: String) {
-        guard let filterClass = NSClassFromString("CAFilter") as? NSObject.Type else {
-            return nil
-        }
+    public var type: FilterType? {
+        guard let raw = internalFilter.value(forKey: "type") as? String else { return nil }
+        return FilterType(rawValue: raw)
+    }
 
-        // call +filterWithType: selector
-        let selector = NSSelectorFromString("filterWithType:")
-        guard filterClass.responds(to: selector) else { return nil }
+    // MARK: - Init with enum
+    public init?(type: FilterType) {
+        guard
+            let CAFilterClass = NSClassFromString("CAFilter") as? NSObject.Type,
+            CAFilterClass.responds(to: NSSelectorFromString("filterWithName:"))
+        else { return nil }
 
-        let unmanaged = filterClass.perform(selector, with: type)
+        let sel = NSSelectorFromString("filterWithName:")
+        let unmanaged = CAFilterClass.perform(sel, with: type.rawValue)
         guard let filterInstance = unmanaged?.takeUnretainedValue() else { return nil }
 
         self.internalFilter = filterInstance
         super.init()
     }
 
-    public init?(name: String) {
-        guard let filterClass = NSClassFromString("CAFilter") as? NSObject.Type else {
-            return nil
-        }
-
-        let selector = NSSelectorFromString("filterWithName:")
-        guard filterClass.responds(to: selector) else { return nil }
-
-        let unmanaged = filterClass.perform(selector, with: name)
-        guard let filterInstance = unmanaged?.takeUnretainedValue() else { return nil }
-
-        self.internalFilter = filterInstance
-        super.init()
-    }
-
+    // MARK: - Key/Value Access
     public func setValue(_ value: Any, forKey key: String) {
         internalFilter.setValue(value, forKey: key)
     }
@@ -69,5 +84,22 @@ import ObjectiveC.runtime
         if internalFilter.responds(to: selector) {
             internalFilter.perform(selector)
         }
+    }
+
+    // MARK: - Convenience for Gaussian Blur
+    public func setBlurRadius(_ radius: CGFloat) {
+        internalFilter.setValue(radius, forKey: "inputRadius")
+    }
+
+    public func blurRadius() -> CGFloat {
+        return internalFilter.value(forKey: "inputRadius") as? CGFloat ?? 0
+    }
+
+    public func setBlurQuality(_ quality: String) {
+        internalFilter.setValue(quality, forKey: "inputQuality")
+    }
+
+    public func blurQuality() -> String {
+        return internalFilter.value(forKey: "inputQuality") as? String ?? "default"
     }
 }
