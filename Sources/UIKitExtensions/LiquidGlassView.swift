@@ -220,31 +220,45 @@ public class LiquidGlassView: UIView {
         rimLayer.frame = bounds
         diffractionLayer.frame = bounds.insetBy(dx: inset, dy: inset)
         
-        // flatten layers
         let colorKey = tintOverlay.backgroundColor.map { UIColor(cgColor: $0).hexValue } ?? 0
         let key = "\(Int(bounds.width))x\(Int(bounds.height))_\(colorKey)"
-        
-        if let cached = LiquidGlassCache.shared.load(for: key) {
-            flattenedDecorLayer.contents = cached
-        } else {
-            // Flatten layers
-            let tempLayer = CALayer()
-            layersToFlatten.forEach { tempLayer.addSublayer($0) }
-            
-            UIGraphicsBeginImageContextWithOptions(bounds.size, false, UIScreen.main.scale)
-            if let ctx = UIGraphicsGetCurrentContext() {
-                autoreleasepool {
-                    tempLayer.render(in: ctx)
+
+        // Async load or flatten
+        LiquidGlassCache.shared.loadAsync(for: key) { [weak self] cachedImage in
+            guard let self = self else { return }
+
+            if let cached = cachedImage {
+                self.flattenedDecorLayer.contents = cached
+            } else {
+                DispatchQueue.global(qos: .userInitiated).async {
+                    let tempLayer = CALayer()
+                    let layersToFlatten: [CALayer] = [
+                        self.tintOverlay,
+                        self.darkenFalloffLayer,
+                        self.cornerHighlightLayer,
+                        self.innerDepthLayer,
+                        self.rimLayer
+                    ]
+                    layersToFlatten.forEach { tempLayer.addSublayer($0) }
+                    
+                    UIGraphicsBeginImageContextWithOptions(self.bounds.size, false, UIScreen.main.scale)
+                    if let ctx = UIGraphicsGetCurrentContext() {
+                        tempLayer.render(in: ctx)
+                    }
+                    let flattenedImage = UIGraphicsGetImageFromCurrentImageContext()?.cgImage
+                    UIGraphicsEndImageContext()
+
+                    if let img = flattenedImage {
+                        LiquidGlassCache.shared.storeAsync(img, for: key)
+                        
+                        DispatchQueue.main.async {
+                            self.flattenedDecorLayer.contents = img
+                        }
+                    }
                 }
             }
-            let flattenedImage = UIGraphicsGetImageFromCurrentImageContext()?.cgImage
-            UIGraphicsEndImageContext()
-            
-            if let img = flattenedImage {
-                LiquidGlassCache.shared.store(img, for: key) // crashes if writing fails
-                flattenedDecorLayer.contents = img
-            }
         }
+        
         
         
         flattenedDecorLayer.frame = bounds
@@ -341,6 +355,29 @@ public final class LiquidGlassCache {
     }
     
     
+    public func loadAsync(for key: String, completion: @escaping (CGImage?) -> Void) {
+        DispatchQueue.global(qos: .userInitiated).async {
+            var image: CGImage? = nil
+
+            // Memory cache first
+            if let cached = self.memoryCache.object(forKey: key as NSString) {
+                image = cached
+            } else {
+                // Disk cache fallback
+                let url = self.filePath(forKey: key)
+                if let data = try? Data(contentsOf: url),
+                   let diskImage = UIImage(data: data)?.cgImage {
+                    self.memoryCache.setObject(diskImage, forKey: key as NSString)
+                    image = diskImage
+                }
+            }
+
+            DispatchQueue.main.async {
+                completion(image)
+            }
+        }
+    }
+    
     // MARK: - Load
     
     public func load(for key: String) -> CGImage? {
@@ -359,6 +396,18 @@ public final class LiquidGlassCache {
         
         return nil
     }
+    
+    public func storeAsync(_ image: CGImage, for key: String) {
+        memoryCache.setObject(image, forKey: key as NSString)
+        let url = filePath(forKey: key)
+        DispatchQueue.global(qos: .utility).async {
+            let uiImage = UIImage(cgImage: image)
+            if let data = uiImage.pngData() {
+                try? data.write(to: url, options: .atomic)
+            }
+        }
+    }
+
     
     
 }
