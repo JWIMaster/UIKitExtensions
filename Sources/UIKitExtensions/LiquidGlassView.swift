@@ -183,6 +183,7 @@ public class LiquidGlassView: UIView {
             if let cached = cachedImage {
                 // Use cached flattened background
                 self.flattenedDecorLayer.contents = cached
+                print("usedcache")
             } else {
                 // Render background layers to an image asynchronously
                 DispatchQueue.global(qos: .userInitiated).async {
@@ -213,7 +214,7 @@ public class LiquidGlassView: UIView {
         
         // Ensure tint is on top of flattened decor
         if tintOverlay.superlayer == nil {
-            flattenedDecorLayer.addSublayer(tintOverlay)
+            //flattenedDecorLayer.addSublayer(tintOverlay)
         }
         
         // Update shadow path
