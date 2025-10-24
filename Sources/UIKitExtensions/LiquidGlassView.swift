@@ -233,7 +233,9 @@ public class LiquidGlassView: UIView {
             
             UIGraphicsBeginImageContextWithOptions(bounds.size, false, UIScreen.main.scale)
             if let ctx = UIGraphicsGetCurrentContext() {
-                tempLayer.render(in: ctx)
+                autoreleasepool {
+                    tempLayer.render(in: ctx)
+                }
             }
             let flattenedImage = UIGraphicsGetImageFromCurrentImageContext()?.cgImage
             UIGraphicsEndImageContext()
