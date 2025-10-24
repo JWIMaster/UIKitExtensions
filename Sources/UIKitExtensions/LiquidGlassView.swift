@@ -38,10 +38,14 @@ public class LiquidGlassView: UIView {
     
     private static var cachedImages: [CacheKey: CGImage] = [:]
     private static let renderQueue: DispatchQueue = {
-        let queue = DispatchQueue(label: "com.jwi.LiquidGlassView.renderQueue")
-        queue.qos = .background
+        let queue = DispatchQueue(
+            label: "com.jwi.LiquidGlassView.renderQueue",
+            attributes: [],
+            target: DispatchQueue.global(qos: .background)
+        )
         return queue
     }()
+
     
     // MARK: - Init
     public init(blurRadius: CGFloat = 12, cornerRadius: CGFloat = 50, snapshotTargetView: UIView?, disableBlur: Bool = false) {
