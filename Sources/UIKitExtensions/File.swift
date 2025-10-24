@@ -5,7 +5,7 @@ import ObjectiveC.runtime
 @objc public class CAFilterWrapper: NSObject {
 
     // MARK: - Filter Types
-    @objc public enum FilterType: String, CaseIterable {
+    public enum FilterType: String, CaseIterable {
         case multiplyColor = "multiplyColor"
         case multiplyGradient = "multiplyGradient"
         case gaussianBlur = "gaussianBlur"
