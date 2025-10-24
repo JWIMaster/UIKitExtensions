@@ -70,7 +70,6 @@ public class LiquidGlassView: UIView {
     required init?(coder: NSCoder) {
         super.init(coder: coder)
         setupView()
-        setupLayers()
         applySaturationBoost()
     }
     
@@ -193,6 +192,7 @@ public class LiquidGlassView: UIView {
                 print(key)
             } else {
                 Self.renderQueue.async {
+                    self.setupLayers()
                     let tempLayer = CALayer()
                     layersToFlatten.forEach { tempLayer.addSublayer($0) }
                     
