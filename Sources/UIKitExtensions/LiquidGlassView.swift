@@ -70,6 +70,7 @@ public class LiquidGlassView: UIView {
     required init?(coder: NSCoder) {
         super.init(coder: coder)
         setupView()
+        
         applySaturationBoost()
     }
     
@@ -185,6 +186,10 @@ public class LiquidGlassView: UIView {
         // Cache key based on size only
         let key = "\(Int(bounds.width))x\(Int(bounds.height))"
         
+        if LiquidGlassCache.shared.exists(for: key) {
+            self.setupLayers()
+        }
+        
         LiquidGlassCache.shared.loadAsync(for: key) { [weak self] cachedImage in
             guard let self = self else { return }
             if let cached = cachedImage {
@@ -192,7 +197,6 @@ public class LiquidGlassView: UIView {
                 print(key)
             } else {
                 Self.renderQueue.async {
-                    self.setupLayers()
                     let tempLayer = CALayer()
                     layersToFlatten.forEach { tempLayer.addSublayer($0) }
                     
@@ -364,5 +368,19 @@ public final class LiquidGlassCache {
             }
         }
     }
+    
+    public func exists(for key: String) -> Bool {
+        var found = false
+        serialQueue.sync {
+            if memoryCache.object(forKey: key as NSString) != nil {
+                found = true
+            } else {
+                let url = filePath(forKey: key)
+                found = FileManager.default.fileExists(atPath: url.path)
+            }
+        }
+        return found
+    }
+
 }
 
