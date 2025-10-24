@@ -37,7 +37,11 @@ public class LiquidGlassView: UIView {
     private var saturationFilter: GPUImageSaturationFilter?
     
     private static var cachedImages: [CacheKey: CGImage] = [:]
-    private static let renderQueue = DispatchQueue(label: "com.jwi.LiquidGlassView.renderQueue")
+    private static let renderQueue: DispatchQueue = {
+        let queue = DispatchQueue(label: "com.jwi.LiquidGlassView.renderQueue")
+        queue.qos = .background
+        return queue
+    }()
     
     // MARK: - Init
     public init(blurRadius: CGFloat = 12, cornerRadius: CGFloat = 50, snapshotTargetView: UIView?, disableBlur: Bool = false) {
@@ -276,7 +280,15 @@ public final class LiquidGlassCache {
     public static let shared = LiquidGlassCache()
     public let memoryCache = NSCache<NSString, CGImage>()
     
-    private let serialQueue = DispatchQueue(label: "com.jwi.LiquidGlassCache")
+    private let serialQueue: DispatchQueue = {
+        let queue = DispatchQueue(
+            label: "com.jwi.LiquidGlassCache",
+            attributes: [],
+            target: DispatchQueue.global(qos: .background)
+        )
+        return queue
+    }()
+
     
     let cacheDirectory: String = {
         let dirs = NSSearchPathForDirectoriesInDomains(.cachesDirectory, .userDomainMask, true)
