@@ -308,7 +308,7 @@ fileprivate extension UIColor {
 
 public class LiquidGlassCache {
     // Shared memory cache
-    public static let memoryCache = NSMapTable<NSString, CGImage>(keyOptions: .strongMemory, valueOptions: .weakMemory)
+    public static let memoryCache = NSCache<NSString, CGImage>()
     
     // Use Caches directory (safe on iOS 6+)
     static let cacheDirectory: String = {
