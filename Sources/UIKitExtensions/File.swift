@@ -54,7 +54,7 @@ import QuartzCore
         internalFilter.perform(NSSelectorFromString("setValue:forKey:"), with: value, with: key)
     }
 
-    public func value(forKey key: String) -> Any? {
+    public override func value(forKey key: String) -> Any? {
         return internalFilter.perform(NSSelectorFromString("valueForKey:"), with: key)?.takeUnretainedValue()
     }
 
