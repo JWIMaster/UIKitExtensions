@@ -186,7 +186,7 @@ public class LiquidGlassView: UIView {
         // Cache key based on size only
         let key = "\(Int(bounds.width))x\(Int(bounds.height))"
         
-        if LiquidGlassCache.shared.exists(for: key) {
+        if !LiquidGlassCache.shared.exists(for: key) {
             self.setupLayers()
         }
         
