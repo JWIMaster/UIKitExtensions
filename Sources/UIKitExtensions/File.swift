@@ -1,6 +1,5 @@
 import UIKit
 import QuartzCore
-import ObjectiveC.runtime
 
 @objc public class CAFilterWrapper: NSObject {
 
@@ -31,75 +30,61 @@ import ObjectiveC.runtime
         case trilinear = "trilinear"
     }
 
-    // MARK: - Private CAFilter instance
+    // MARK: - Private filter instance
     private let internalFilter: AnyObject
 
-    // MARK: - Public properties
-    public var isEnabled: Bool {
-        get { internalFilter.value(forKey: "enabled") as? Bool ?? true }
-        set { internalFilter.setValue(newValue, forKey: "enabled") }
-    }
-
-    public var cachesInputImage: Bool {
-        get { internalFilter.value(forKey: "cachesInputImage") as? Bool ?? false }
-        set { internalFilter.setValue(newValue, forKey: "cachesInputImage") }
-    }
-
-    public var name: String {
-        get { internalFilter.value(forKey: "name") as? String ?? "" }
-        set { internalFilter.setValue(newValue, forKey: "name") }
-    }
-
-    public var type: FilterType? {
-        guard let raw = internalFilter.value(forKey: "type") as? String else { return nil }
-        return FilterType(rawValue: raw)
-    }
-
-    // MARK: - Init with enum
+    // MARK: - Public init
     public init?(type: FilterType) {
-        guard
-            let CAFilterClass = NSClassFromString("CAFilter") as? NSObject.Type,
-            CAFilterClass.responds(to: NSSelectorFromString("filterWithName:"))
-        else { return nil }
+        guard let CAFilterClass = NSClassFromString("CAFilter") as? NSObject.Type else {
+            return nil
+        }
 
         let sel = NSSelectorFromString("filterWithName:")
-        let unmanaged = CAFilterClass.perform(sel, with: type.rawValue)
-        guard let filterInstance = unmanaged?.takeUnretainedValue() else { return nil }
+        guard CAFilterClass.responds(to: sel),
+              let filter = CAFilterClass.perform(sel, with: type.rawValue)?.takeUnretainedValue() else {
+            return nil
+        }
 
-        self.internalFilter = filterInstance
+        self.internalFilter = filter
         super.init()
     }
 
     // MARK: - Key/Value Access
     public func setValue(_ value: Any, forKey key: String) {
-        internalFilter.setValue(value, forKey: key)
+        internalFilter.perform(NSSelectorFromString("setValue:forKey:"), with: value, with: key)
     }
 
-    public override func value(forKey key: String) -> Any? {
-        internalFilter.value(forKey: key)
+    public func value(forKey key: String) -> Any? {
+        return internalFilter.perform(NSSelectorFromString("valueForKey:"), with: key)?.takeUnretainedValue()
     }
 
     public func setDefaults() {
-        let selector = NSSelectorFromString("setDefaults")
-        if internalFilter.responds(to: selector) {
-            internalFilter.perform(selector)
+        let sel = NSSelectorFromString("setDefaults")
+        if internalFilter.responds(to: sel) {
+            internalFilter.perform(sel)
         }
     }
 
     // MARK: - Convenience for Gaussian Blur
     public func setBlurRadius(_ radius: CGFloat) {
-        internalFilter.setValue(radius, forKey: "inputRadius")
+        setValue(radius, forKey: "inputRadius")
     }
 
     public func blurRadius() -> CGFloat {
-        return internalFilter.value(forKey: "inputRadius") as? CGFloat ?? 0
+        return value(forKey: "inputRadius") as? CGFloat ?? 0
     }
 
     public func setBlurQuality(_ quality: String) {
-        internalFilter.setValue(quality, forKey: "inputQuality")
+        setValue(quality, forKey: "inputQuality")
     }
 
     public func blurQuality() -> String {
-        return internalFilter.value(forKey: "inputQuality") as? String ?? "default"
+        return value(forKey: "inputQuality") as? String ?? "default"
+    }
+
+    // MARK: - Apply to layer
+    public func apply(to layer: CALayer) {
+        // layer.filters expects [Any]
+        layer.setValue([internalFilter], forKey: "filters")
     }
 }
