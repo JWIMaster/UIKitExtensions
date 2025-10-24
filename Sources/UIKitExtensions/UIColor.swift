@@ -18,6 +18,26 @@ public extension UIColor {
     }
 }
 
+extension UIColor {
+    /// Generates a random color close to `baseColor`.
+    static func random(around baseColor: UIColor, variance: CGFloat = 0.1) -> UIColor {
+        var red: CGFloat = 0
+        var green: CGFloat = 0
+        var blue: CGFloat = 0
+        var alpha: CGFloat = 0
+        
+        baseColor.getRed(&red, green: &green, blue: &blue, alpha: &alpha)
+        
+        // Add random delta, clamp between 0 and 1
+        let randomRed = min(max(red + CGFloat.random(in: -variance...variance), 0), 1)
+        let randomGreen = min(max(green + CGFloat.random(in: -variance...variance), 0), 1)
+        let randomBlue = min(max(blue + CGFloat.random(in: -variance...variance), 0), 1)
+        
+        return UIColor(red: randomRed, green: randomGreen, blue: randomBlue, alpha: alpha)
+    }
+}
+
+
 public extension UIColor {
     /// Returns a version of the color with increased saturation
     func withIncreasedSaturation(factor: CGFloat) -> UIColor {
