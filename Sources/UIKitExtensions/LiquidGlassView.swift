@@ -5,62 +5,19 @@ import FoundationCompatKit
 
 public class LiquidGlassView: UIView {
     
-    // MARK: - Public properties
-    public var cornerRadius: CGFloat = 50 {
-        didSet { updateCornersAndShadow() }
-    }
-    
-    public var shadowOpacity: Float = 0.6 {
-        didSet { updateCornersAndShadow() }
-    }
-    
-    public var shadowRadius: CGFloat = 12 {
-        didSet { updateCornersAndShadow() }
-    }
-    
-    public var shadowColor: CGColor = UIColor.black.cgColor {
-        didSet { updateCornersAndShadow() }
-    }
-    
-    public var shadowOffset: CGSize = .zero {
-        didSet { updateCornersAndShadow() }
-    }
-    
-    public var saturationBoost: CGFloat = 1.1 {
-        didSet { applySaturationBoost() }
-    }
-    
-    public var blurRadius: CGFloat = 12 {
-        didSet { blurView?.blurRadius = blurRadius }
-    }
-    
-    public var scaleFactor: CGFloat = 0.4 {
-        didSet { blurView?.scaleFactor = scaleFactor }
-    }
-    
-    public var frameInterval: Int = 3 {
-        didSet { blurView?.frameInterval = UInt(frameInterval) }
-    }
-    
-    public var isLiveBlurring: Bool = true {
-        didSet { blurView?.isLiveBlurring = isLiveBlurring }
-    }
-    
-    public weak var snapshotTargetView: UIView? {
-        didSet { blurView?.snapshotTargetView = snapshotTargetView }
-    }
-    
-    public var tintColorForGlass: UIColor = UIColor.blue.withAlphaComponent(0.05) {
-        didSet {
-            tintOverlay.backgroundColor = tintColorForGlass.cgColor
-        }
-    }
-    
-    public var solidViewColour: UIColor = .clear {
-        didSet {
-            solidView?.backgroundColor = solidViewColour
-        }
-    }
+    public var cornerRadius: CGFloat = 50 { didSet { updateCornersAndShadow() } }
+    public var shadowOpacity: Float = 0.6 { didSet { updateCornersAndShadow() } }
+    public var shadowRadius: CGFloat = 12 { didSet { updateCornersAndShadow() } }
+    public var shadowColor: CGColor = UIColor.black.cgColor { didSet { updateCornersAndShadow() } }
+    public var shadowOffset: CGSize = .zero { didSet { updateCornersAndShadow() } }
+    public var saturationBoost: CGFloat = 1.1 { didSet { applySaturationBoost() } }
+    public var blurRadius: CGFloat = 12 { didSet { blurView?.blurRadius = blurRadius } }
+    public var scaleFactor: CGFloat = 0.4 { didSet { blurView?.scaleFactor = scaleFactor } }
+    public var frameInterval: Int = 3 { didSet { blurView?.frameInterval = UInt(frameInterval) } }
+    public var isLiveBlurring: Bool = true { didSet { blurView?.isLiveBlurring = isLiveBlurring } }
+    public weak var snapshotTargetView: UIView? { didSet { blurView?.snapshotTargetView = snapshotTargetView } }
+    public var tintColorForGlass: UIColor = UIColor.blue.withAlphaComponent(0.05) { didSet { tintOverlay.backgroundColor = tintColorForGlass.cgColor } }
+    public var solidViewColour: UIColor = .clear { didSet { solidView?.backgroundColor = solidViewColour }}
     
     /// NEW: disable blur completely
     public var disableBlur: Bool = false
@@ -200,45 +157,36 @@ public class LiquidGlassView: UIView {
             solidView.frame = bounds
         }
         
-        // Position layers temporarily for flattening
+        // Position layers temporarily for flattening (excluding tintOverlay)
         let inset: CGFloat = 2
         let layersToFlatten: [CALayer] = [
-            tintOverlay,
             darkenFalloffLayer,
             cornerHighlightLayer,
             innerDepthLayer,
-            //refractLayer,
             rimLayer
-            //diffractionLayer
         ]
         
-        tintOverlay.frame = bounds
         darkenFalloffLayer.frame = bounds
         cornerHighlightLayer.frame = bounds
         innerDepthLayer.frame = bounds.insetBy(dx: inset * 0.5, dy: inset * 0.5)
-        refractLayer.frame = bounds.insetBy(dx: bounds.width * 0.05, dy: bounds.height * 0.05)
         rimLayer.frame = bounds
-        diffractionLayer.frame = bounds.insetBy(dx: inset, dy: inset)
+        flattenedDecorLayer.frame = bounds
+        flattenedDecorLayer.cornerRadius = cornerRadius
+        flattenedDecorLayer.masksToBounds = true
         
-        let colorKey = tintOverlay.backgroundColor.map { UIColor(cgColor: $0).hexValue } ?? 0
-        let key = "\(Int(bounds.width))x\(Int(bounds.height))_\(colorKey)"
-
-        // Async load or flatten
+        // Cache key based on size only
+        let key = "\(Int(bounds.width))x\(Int(bounds.height))"
+        
         LiquidGlassCache.shared.loadAsync(for: key) { [weak self] cachedImage in
             guard let self = self else { return }
-
+            
             if let cached = cachedImage {
+                // Use cached flattened background
                 self.flattenedDecorLayer.contents = cached
             } else {
+                // Render background layers to an image asynchronously
                 DispatchQueue.global(qos: .userInitiated).async {
                     let tempLayer = CALayer()
-                    let layersToFlatten: [CALayer] = [
-                        self.tintOverlay,
-                        self.darkenFalloffLayer,
-                        self.cornerHighlightLayer,
-                        self.innerDepthLayer,
-                        self.rimLayer
-                    ]
                     layersToFlatten.forEach { tempLayer.addSublayer($0) }
                     
                     UIGraphicsBeginImageContextWithOptions(self.bounds.size, false, UIScreen.main.scale)
@@ -247,7 +195,7 @@ public class LiquidGlassView: UIView {
                     }
                     let flattenedImage = UIGraphicsGetImageFromCurrentImageContext()?.cgImage
                     UIGraphicsEndImageContext()
-
+                    
                     if let img = flattenedImage {
                         LiquidGlassCache.shared.storeAsync(img, for: key)
                         
@@ -259,17 +207,22 @@ public class LiquidGlassView: UIView {
             }
         }
         
+        // Apply tint on top dynamically
+        tintOverlay.frame = bounds
+        tintOverlay.backgroundColor = tintColorForGlass.cgColor
         
+        // Ensure tint is on top of flattened decor
+        if tintOverlay.superlayer == nil {
+            flattenedDecorLayer.addSublayer(tintOverlay)
+        }
         
-        flattenedDecorLayer.frame = bounds
-        flattenedDecorLayer.cornerRadius = cornerRadius
-        flattenedDecorLayer.masksToBounds = true
-        
+        // Update shadow path
         layer.shadowPath = UIBezierPath(
             roundedRect: bounds,
             cornerRadius: cornerRadius * 0.85
         ).cgPath
     }
+
     
     private func updateCornersAndShadow() {
         layer.cornerRadius = cornerRadius
