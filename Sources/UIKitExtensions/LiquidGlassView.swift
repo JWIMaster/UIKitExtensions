@@ -197,6 +197,7 @@ public class LiquidGlassView: UIView {
                 print(key)
             } else {
                 Self.renderQueue.async {
+                    print("rendering")
                     let tempLayer = CALayer()
                     layersToFlatten.forEach { tempLayer.addSublayer($0) }
                     
