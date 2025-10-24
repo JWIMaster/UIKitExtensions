@@ -28,7 +28,7 @@ extension UIView {
 }
 
 
-extension UIView {
+public extension UIView {
     var parentViewController: UIViewController? {
         var responder: UIResponder? = self
         while let r = responder {
