@@ -37,6 +37,7 @@ public class LiquidGlassView: UIView {
     private var saturationFilter: GPUImageSaturationFilter?
     
     private static var cachedImages: [CacheKey: CGImage] = [:]
+    private static let renderQueue = DispatchQueue(label: "com.jwi.LiquidGlassView.renderQueue")
     
     // MARK: - Init
     public init(blurRadius: CGFloat = 12, cornerRadius: CGFloat = 50, snapshotTargetView: UIView?, disableBlur: Bool = false) {
@@ -179,14 +180,11 @@ public class LiquidGlassView: UIView {
         
         LiquidGlassCache.shared.loadAsync(for: key) { [weak self] cachedImage in
             guard let self = self else { return }
-            
             if let cached = cachedImage {
-                // Use cached flattened background
                 self.flattenedDecorLayer.contents = cached
                 print("usedcache")
             } else {
-                // Render background layers to an image asynchronously
-                DispatchQueue.global(qos: .userInitiated).async {
+                Self.renderQueue.async {
                     let tempLayer = CALayer()
                     layersToFlatten.forEach { tempLayer.addSublayer($0) }
                     
@@ -276,48 +274,67 @@ fileprivate extension UIColor {
 
 public final class LiquidGlassCache {
     public static let shared = LiquidGlassCache()
-    // Shared memory cache
     public let memoryCache = NSCache<NSString, CGImage>()
     
-    // Use Caches directory (safe on iOS 6+)
+    private let serialQueue = DispatchQueue(label: "com.jwi.LiquidGlassCache")
+    
     let cacheDirectory: String = {
         let dirs = NSSearchPathForDirectoriesInDomains(.cachesDirectory, .userDomainMask, true)
         return dirs.first ?? NSTemporaryDirectory()
     }()
     
-    // MARK: - Helpers
-    
     public func filePath(forKey key: String) -> URL {
-        let path = cacheDirectory + "/" + key + ".png"
-        return URL(fileURLWithPath: path)
+        return URL(fileURLWithPath: cacheDirectory + "/" + key + ".png")
     }
     
-    // MARK: - Store (crashes if write fails)
+    // MARK: - Synchronous store/load
     
     public func store(_ image: CGImage, for key: String) {
-        // Memory cache
         memoryCache.setObject(image, forKey: key as NSString)
         
-        // Disk cache — force-try to crash if something goes wrong
         let url = filePath(forKey: key)
-        let uiImage = UIImage(cgImage: image)  // no optional binding needed
+        let uiImage = UIImage(cgImage: image)
         if let data = uiImage.pngData() {
-            try! data.write(to: url, options: .atomic) // crash on failure
-        } else {
-            fatalError("Failed to convert CGImage to PNG data for key: \(key)")
+            try? data.write(to: url, options: .atomic)
         }
     }
     
+    public func load(for key: String) -> CGImage? {
+        if let cached = memoryCache.object(forKey: key as NSString) {
+            return cached
+        }
+        let url = filePath(forKey: key)
+        if let data = try? Data(contentsOf: url),
+           let image = UIImage(data: data)?.cgImage {
+            memoryCache.setObject(image, forKey: key as NSString)
+            return image
+        }
+        return nil
+    }
+    
+    // MARK: - Asynchronous store/load using serial queue
+    
+    public func storeAsync(_ image: CGImage, for key: String) {
+        serialQueue.async { [weak self] in
+            guard let self = self else { return }
+            self.memoryCache.setObject(image, forKey: key as NSString)
+            
+            let url = self.filePath(forKey: key)
+            let uiImage = UIImage(cgImage: image)
+            if let data = uiImage.pngData() {
+                try? data.write(to: url, options: .atomic)
+            }
+        }
+    }
     
     public func loadAsync(for key: String, completion: @escaping (CGImage?) -> Void) {
-        DispatchQueue.global(qos: .userInitiated).async {
+        serialQueue.async { [weak self] in
+            guard let self = self else { return }
             var image: CGImage? = nil
-
-            // Memory cache first
+            
             if let cached = self.memoryCache.object(forKey: key as NSString) {
                 image = cached
             } else {
-                // Disk cache fallback
                 let url = self.filePath(forKey: key)
                 if let data = try? Data(contentsOf: url),
                    let diskImage = UIImage(data: data)?.cgImage {
@@ -325,43 +342,11 @@ public final class LiquidGlassCache {
                     image = diskImage
                 }
             }
-
+            
             DispatchQueue.main.async {
                 completion(image)
             }
         }
     }
-    
-    // MARK: - Load
-    
-    public func load(for key: String) -> CGImage? {
-        // Memory cache first
-        if let cached = memoryCache.object(forKey: key as NSString) {
-            return cached
-        }
-        
-        // Disk cache fallback
-        let url = filePath(forKey: key)
-        if let data = try? Data(contentsOf: url),
-           let image = UIImage(data: data)?.cgImage {
-            memoryCache.setObject(image, forKey: key as NSString)
-            return image
-        }
-        
-        return nil
-    }
-    
-    public func storeAsync(_ image: CGImage, for key: String) {
-        memoryCache.setObject(image, forKey: key as NSString)
-        let url = filePath(forKey: key)
-        DispatchQueue.global(qos: .utility).async {
-            let uiImage = UIImage(cgImage: image)
-            if let data = uiImage.pngData() {
-                try? data.write(to: url, options: .atomic)
-            }
-        }
-    }
-
-    
-    
 }
+
