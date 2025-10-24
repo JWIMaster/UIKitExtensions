@@ -224,7 +224,7 @@ public class LiquidGlassView: UIView {
         let colorKey = tintOverlay.backgroundColor.map { UIColor(cgColor: $0).hexValue } ?? 0
         let key = "\(Int(bounds.width))x\(Int(bounds.height))_\(colorKey)"
         
-        if let cached = LiquidGlassCache.load(for: key) {
+        if let cached = LiquidGlassCache.shared.load(for: key) {
             flattenedDecorLayer.contents = cached
         } else {
             // Flatten layers
@@ -241,7 +241,7 @@ public class LiquidGlassView: UIView {
             UIGraphicsEndImageContext()
             
             if let img = flattenedImage {
-                LiquidGlassCache.store(img, for: key) // crashes if writing fails
+                LiquidGlassCache.shared.store(img, for: key) // crashes if writing fails
                 flattenedDecorLayer.contents = img
             }
         }
@@ -307,25 +307,26 @@ fileprivate extension UIColor {
 }
 
 final class LiquidGlassCache {
+    static let shared = LiquidGlassCache()
     // Shared memory cache
-    public static let memoryCache = NSCache<NSString, CGImage>()
+    public let memoryCache = NSCache<NSString, CGImage>()
     
     // Use Caches directory (safe on iOS 6+)
-    static let cacheDirectory: String = {
+    let cacheDirectory: String = {
         let dirs = NSSearchPathForDirectoriesInDomains(.cachesDirectory, .userDomainMask, true)
         return dirs.first ?? NSTemporaryDirectory()
     }()
     
     // MARK: - Helpers
     
-    public static func filePath(forKey key: String) -> URL {
+    public func filePath(forKey key: String) -> URL {
         let path = cacheDirectory + "/" + key + ".png"
         return URL(fileURLWithPath: path)
     }
     
     // MARK: - Store (crashes if write fails)
     
-    public static func store(_ image: CGImage, for key: String) {
+    public func store(_ image: CGImage, for key: String) {
         // Memory cache
         memoryCache.setObject(image, forKey: key as NSString)
         
@@ -342,7 +343,7 @@ final class LiquidGlassCache {
     
     // MARK: - Load
     
-    public static func load(for key: String) -> CGImage? {
+    public func load(for key: String) -> CGImage? {
         // Memory cache first
         if let cached = memoryCache.object(forKey: key as NSString) {
             return cached
