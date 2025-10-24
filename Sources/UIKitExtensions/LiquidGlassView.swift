@@ -306,7 +306,7 @@ fileprivate extension UIColor {
     }
 }
 
-final class LiquidGlassCache {
+public final class LiquidGlassCache {
     static let shared = LiquidGlassCache()
     // Shared memory cache
     public let memoryCache = NSCache<NSString, CGImage>()
