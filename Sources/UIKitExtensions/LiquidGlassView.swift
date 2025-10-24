@@ -220,7 +220,7 @@ public class LiquidGlassView: UIView {
         
         // Ensure tint is on top of flattened decor
         if tintOverlay.superlayer == nil {
-            //flattenedDecorLayer.addSublayer(tintOverlay)
+            flattenedDecorLayer.addSublayer(tintOverlay)
         }
         
         // Update shadow path
