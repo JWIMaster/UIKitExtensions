@@ -3,62 +3,38 @@ import QuartzCore
 
 @objc public class CAFilterWrapper: NSObject {
 
-    // MARK: - Filter Types
+    // Swift-only enum
     public enum FilterType: String, CaseIterable {
-        case multiplyColor = "multiplyColor"
-        case multiplyGradient = "multiplyGradient"
-        case gaussianBlur = "gaussianBlur"
-        case pageCurl = "pageCurl"
-        case fog = "fog"
-        case lighting = "lighting"
-        case clear = "clear"
-        case copy = "copy"
-        case sourceOver = "sourceOver"
-        case sourceIn = "sourceIn"
-        case sourceOut = "sourceOut"
-        case sourceAtop = "sourceAtop"
-        case destOver = "destOver"
-        case destIn = "destIn"
-        case destOut = "destOut"
-        case destAtop = "destAtop"
-        case xor = "xor"
-        case plusL = "plusL"
-        case multiply = "multiply"
-        case lanczos = "lanczos"
-        case linear = "linear"
-        case nearest = "nearest"
-        case trilinear = "trilinear"
+        case multiplyColor, multiplyGradient, gaussianBlur, pageCurl, fog, lighting, clear, copy
+        case sourceOver, sourceIn, sourceOut, sourceAtop, destOver, destIn, destOut, destAtop
+        case xor, plusL, multiply, lanczos, linear, nearest, trilinear
     }
 
-    // MARK: - Private filter instance
+    // Private filter instance
     private let internalFilter: AnyObject
 
-    // MARK: - Public init
+    // Init
     public init?(type: FilterType) {
-        guard let CAFilterClass = NSClassFromString("CAFilter") as? NSObject.Type else {
-            return nil
-        }
-
+        guard let CAFilterClass = NSClassFromString("CAFilter") as? NSObject.Type else { return nil }
         let sel = NSSelectorFromString("filterWithName:")
         guard CAFilterClass.responds(to: sel),
               let filter = CAFilterClass.perform(sel, with: type.rawValue)?.takeUnretainedValue() else {
             return nil
         }
-
         self.internalFilter = filter
         super.init()
     }
 
-    // MARK: - Key/Value Access
-    public func setValue(_ value: Any, forKey key: String) {
-        internalFilter.perform(NSSelectorFromString("setValue:forKey:"), with: value, with: key)
+    // MARK: - Key/Value Access (renamed to avoid NSObject conflict)
+    @objc public func setFilterValue(_ value: Any, forKey key: String) {
+        (internalFilter as? NSObject)?.setValue(value, forKey: key)
     }
 
-    public override func value(forKey key: String) -> Any? {
-        return internalFilter.perform(NSSelectorFromString("valueForKey:"), with: key)?.takeUnretainedValue()
+    @objc public func filterValue(forKey key: String) -> Any? {
+        return (internalFilter as? NSObject)?.value(forKey: key)
     }
 
-    public func setDefaults() {
+    @objc public func setDefaults() {
         let sel = NSSelectorFromString("setDefaults")
         if internalFilter.responds(to: sel) {
             internalFilter.perform(sel)
@@ -66,25 +42,24 @@ import QuartzCore
     }
 
     // MARK: - Convenience for Gaussian Blur
-    public func setBlurRadius(_ radius: CGFloat) {
-        setValue(radius, forKey: "inputRadius")
+    @objc public func setBlurRadius(_ radius: CGFloat) {
+        setFilterValue(radius, forKey: "inputRadius")
     }
 
-    public func blurRadius() -> CGFloat {
-        return value(forKey: "inputRadius") as? CGFloat ?? 0
+    @objc public func blurRadius() -> CGFloat {
+        return filterValue(forKey: "inputRadius") as? CGFloat ?? 0
     }
 
-    public func setBlurQuality(_ quality: String) {
-        setValue(quality, forKey: "inputQuality")
+    @objc public func setBlurQuality(_ quality: String) {
+        setFilterValue(quality, forKey: "inputQuality")
     }
 
-    public func blurQuality() -> String {
-        return value(forKey: "inputQuality") as? String ?? "default"
+    @objc public func blurQuality() -> String {
+        return filterValue(forKey: "inputQuality") as? String ?? "default"
     }
 
     // MARK: - Apply to layer
-    public func apply(to layer: CALayer) {
-        // layer.filters expects [Any]
+    @objc public func apply(to layer: CALayer) {
         layer.setValue([internalFilter], forKey: "filters")
     }
 }
