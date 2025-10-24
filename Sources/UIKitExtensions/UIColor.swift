@@ -18,7 +18,7 @@ public extension UIColor {
     }
 }
 
-extension UIColor {
+public extension UIColor {
     /// Generates a random color close to `baseColor`.
     static func random(around baseColor: UIColor, variance: CGFloat = 0.1) -> UIColor {
         var red: CGFloat = 0
