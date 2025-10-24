@@ -190,7 +190,7 @@ public class LiquidGlassView: UIView {
             guard let self = self else { return }
             if let cached = cachedImage {
                 self.flattenedDecorLayer.contents = cached
-                print("usedcache")
+                print(key)
             } else {
                 Self.renderQueue.async {
                     let tempLayer = CALayer()
