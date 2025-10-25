@@ -3,8 +3,11 @@ import GPUImage1Swift
 import LiveFrost
 import FoundationCompatKit
 
+import UIKit
+import GPUImage1Swift
+
 public class LiquidGlassView: UIView {
-    
+
     public var cornerRadius: CGFloat = 50 { didSet { updateCornersAndShadow() } }
     public var shadowOpacity: Float = 0.6 { didSet { updateCornersAndShadow() } }
     public var shadowRadius: CGFloat = 12 { didSet { updateCornersAndShadow() } }
@@ -17,12 +20,10 @@ public class LiquidGlassView: UIView {
     public var isLiveBlurring: Bool = true { didSet { blurView?.isLiveBlurring = isLiveBlurring } }
     public weak var snapshotTargetView: UIView? { didSet { blurView?.snapshotTargetView = snapshotTargetView } }
     public var tintColorForGlass: UIColor = UIColor.blue.withAlphaComponent(0.05) { didSet { tintOverlay.backgroundColor = tintColorForGlass.cgColor } }
-    public var solidViewColour: UIColor = .clear { didSet { solidView?.backgroundColor = solidViewColour }}
-    
-    /// NEW: disable blur completely
+    public var solidViewColour: UIColor = .clear { didSet { solidView?.backgroundColor = solidViewColour } }
     public var disableBlur: Bool = false
-    
-    // MARK: - Subviews
+
+    // Subviews and layers
     public var blurView: LFGlassView?
     public var solidView: UIView?
     private let tintOverlay = CALayer()
@@ -32,21 +33,9 @@ public class LiquidGlassView: UIView {
     private let refractLayer = CAGradientLayer()
     private let rimLayer = CALayer()
     private let diffractionLayer = CALayer()
-    private let flattenedDecorLayer = CALayer()   // flattened composite layer
-    
-    private var saturationFilter: GPUImageSaturationFilter?
-    
-    private static var cachedImages: [CacheKey: CGImage] = [:]
-    private static let renderQueue: DispatchQueue = {
-        let queue = DispatchQueue(
-            label: "com.jwi.LiquidGlassView.renderQueue",
-            attributes: .concurrent,
-            target: DispatchQueue.global(qos: .background)
-        )
-        return queue
-    }()
 
-    
+    private var saturationFilter: GPUImageSaturationFilter?
+
     // MARK: - Init
     public init(blurRadius: CGFloat = 12, cornerRadius: CGFloat = 50, snapshotTargetView: UIView?, disableBlur: Bool = false) {
         super.init(frame: .zero)
@@ -54,6 +43,7 @@ public class LiquidGlassView: UIView {
         self.blurRadius = blurRadius
         self.snapshotTargetView = snapshotTargetView
         self.disableBlur = disableBlur
+
         if !disableBlur {
             let blur = LFGlassView()
             blur.snapshotTargetView = snapshotTargetView
@@ -62,29 +52,29 @@ public class LiquidGlassView: UIView {
         } else {
             solidView = UIView()
         }
+
         setupView()
         setupLayers()
         applySaturationBoost()
     }
-    
+
     required init?(coder: NSCoder) {
         super.init(coder: coder)
         setupView()
-        
+        setupLayers()
         applySaturationBoost()
     }
-    
+
     // MARK: - Setup
     private func setupView() {
         clipsToBounds = true
         layer.masksToBounds = false
-        
+
         if disableBlur {
             if let solidView = solidView {
                 solidView.layer.cornerRadius = cornerRadius
                 solidView.layer.masksToBounds = true
                 addSubview(solidView)
-                sendSubviewToBack(solidView)
             }
         } else if let blurView = blurView {
             blurView.isLiveBlurring = true
@@ -93,19 +83,21 @@ public class LiquidGlassView: UIView {
             addSubview(blurView)
         }
     }
-    
+
     private func setupLayers() {
-        // configure decorative layers
-        tintOverlay.backgroundColor = UIColor.blue.withAlphaComponent(0.05).cgColor
+        // Decorative layers
+        tintOverlay.backgroundColor = tintColorForGlass.cgColor
         tintOverlay.compositingFilter = "softLightBlendMode"
         tintOverlay.cornerRadius = cornerRadius
-        
+        layer.addSublayer(tintOverlay)
+
         darkenFalloffLayer.colors = [UIColor.black.withAlphaComponent(0.22).cgColor, UIColor.clear.cgColor]
         darkenFalloffLayer.startPoint = CGPoint(x: 0.5, y: 1)
         darkenFalloffLayer.endPoint = CGPoint(x: 0.5, y: 0)
         darkenFalloffLayer.compositingFilter = "multiplyBlendMode"
         darkenFalloffLayer.cornerRadius = cornerRadius
-        
+        layer.addSublayer(darkenFalloffLayer)
+
         cornerHighlightLayer.colors = [
             UIColor.white.withAlphaComponent(0.25).cgColor,
             UIColor.clear.cgColor,
@@ -117,7 +109,8 @@ public class LiquidGlassView: UIView {
         cornerHighlightLayer.endPoint = CGPoint(x: 1, y: 1)
         cornerHighlightLayer.compositingFilter = "screenBlendMode"
         cornerHighlightLayer.cornerRadius = cornerRadius
-        
+        layer.addSublayer(cornerHighlightLayer)
+
         innerDepthLayer.colors = [
             UIColor.black.withAlphaComponent(0.15).cgColor,
             UIColor.clear.cgColor,
@@ -128,7 +121,8 @@ public class LiquidGlassView: UIView {
         innerDepthLayer.endPoint = CGPoint(x: 0.5, y: 0)
         innerDepthLayer.compositingFilter = "softLightBlendMode"
         innerDepthLayer.cornerRadius = cornerRadius
-        
+        layer.addSublayer(innerDepthLayer)
+
         refractLayer.colors = [
             UIColor.white.withAlphaComponent(0.05).cgColor,
             UIColor.clear.cgColor,
@@ -139,103 +133,38 @@ public class LiquidGlassView: UIView {
         refractLayer.endPoint = CGPoint(x: 1, y: 1)
         refractLayer.compositingFilter = "differenceBlendMode"
         refractLayer.cornerRadius = cornerRadius
-        
+        layer.addSublayer(refractLayer)
+
         rimLayer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
         rimLayer.borderWidth = 0.8
         rimLayer.cornerRadius = cornerRadius
-        
+        layer.addSublayer(rimLayer)
+
         diffractionLayer.backgroundColor = UIColor.white.withAlphaComponent(0.03).cgColor
         diffractionLayer.compositingFilter = "differenceBlendMode"
         diffractionLayer.cornerRadius = cornerRadius - 1
-        
-        // add flattened composite holder
-        layer.addSublayer(flattenedDecorLayer)
-        
-        updateCornersAndShadow()
+        layer.addSublayer(diffractionLayer)
     }
-    
+
     // MARK: - Layout
     public override func layoutSubviews() {
         super.layoutSubviews()
-        
-        if let blurView = blurView {
-            blurView.frame = bounds
-        }
-        
-        if let solidView = solidView {
-            solidView.frame = bounds
-        }
-        
-        // Position layers temporarily for flattening (excluding tintOverlay)
+
+        blurView?.frame = bounds
+        solidView?.frame = bounds
+
         let inset: CGFloat = 2
-        let layersToFlatten: [CALayer] = [
-            darkenFalloffLayer,
-            cornerHighlightLayer,
-            innerDepthLayer,
-            rimLayer
-        ]
-        
         darkenFalloffLayer.frame = bounds
         cornerHighlightLayer.frame = bounds
         innerDepthLayer.frame = bounds.insetBy(dx: inset * 0.5, dy: inset * 0.5)
+        refractLayer.frame = bounds
         rimLayer.frame = bounds
-        flattenedDecorLayer.frame = bounds
-        flattenedDecorLayer.cornerRadius = cornerRadius
-        flattenedDecorLayer.masksToBounds = true
-        
-        // Cache key based on size only
-        let key = "\(Int(bounds.width))x\(Int(bounds.height))"
-        
-        if !LiquidGlassCache.shared.exists(for: key) {
-            self.setupLayers()
-        }
-        
-        LiquidGlassCache.shared.loadAsync(for: key) { [weak self] cachedImage in
-            guard let self = self else { return }
-            if let cached = cachedImage {
-                self.flattenedDecorLayer.contents = cached
-                print(key)
-            } else {
-                Self.renderQueue.async {
-                    print("rendering")
-                    let tempLayer = CALayer()
-                    layersToFlatten.forEach { tempLayer.addSublayer($0) }
-                    
-                    UIGraphicsBeginImageContextWithOptions(self.bounds.size, false, UIScreen.main.scale)
-                    if let ctx = UIGraphicsGetCurrentContext() {
-                        tempLayer.render(in: ctx)
-                    }
-                    let flattenedImage = UIGraphicsGetImageFromCurrentImageContext()?.cgImage
-                    UIGraphicsEndImageContext()
-                    
-                    if let img = flattenedImage {
-                        LiquidGlassCache.shared.storeAsync(img, for: key)
-                        
-                        DispatchQueue.main.async {
-                            self.flattenedDecorLayer.contents = img
-                        }
-                    }
-                }
-            }
-        }
-        
-        // Apply tint on top dynamically
+        diffractionLayer.frame = bounds
         tintOverlay.frame = bounds
-        tintOverlay.backgroundColor = tintColorForGlass.cgColor
-        
-        // Ensure tint is on top of flattened decor
-        if tintOverlay.superlayer == nil {
-            flattenedDecorLayer.addSublayer(tintOverlay)
-        }
-        
-        // Update shadow path
-        layer.shadowPath = UIBezierPath(
-            roundedRect: bounds,
-            cornerRadius: cornerRadius * 0.85
-        ).cgPath
+
+        updateCornersAndShadow()
     }
 
-    
     private func updateCornersAndShadow() {
         layer.cornerRadius = cornerRadius
         layer.shadowColor = shadowColor
@@ -244,11 +173,11 @@ public class LiquidGlassView: UIView {
         layer.shadowOffset = shadowOffset
         layer.shouldRasterize = true
         layer.rasterizationScale = UIScreen.main.scale
+
         solidView?.layer.cornerRadius = cornerRadius
         blurView?.layer.cornerRadius = cornerRadius
-        flattenedDecorLayer.cornerRadius = cornerRadius
     }
-    
+
     private func applySaturationBoost() {
 #if canImport(GPUImage1Swift)
         saturationFilter = GPUImageSaturationFilter()
