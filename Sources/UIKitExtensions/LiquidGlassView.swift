@@ -188,6 +188,11 @@ public class LiquidGlassView: UIView {
         solidView?.frame = bounds
         decorLayer.frame = bounds
         renderDecorLayer()
+        
+        layer.shadowPath = UIBezierPath(
+            roundedRect: bounds,
+            cornerRadius: cornerRadius * 0.85
+        ).cgPath
         updateCornersAndShadow()
     }
 
