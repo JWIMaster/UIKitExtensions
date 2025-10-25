@@ -19,13 +19,22 @@ public extension UIImage {
         return image
     }
     
-    func resizeImage(toSize targetSize: CGSize) -> UIImage {
-        UIGraphicsBeginImageContextWithOptions(targetSize, false, 0.0)
-        self.draw(in: CGRect(origin: .zero, size: targetSize))
+    func resizeImage(toSize targetSize: CGSize) -> UIImage? {
+        let widthRatio  = targetSize.width  / self.size.width
+        let heightRatio = targetSize.height / self.size.height
+        let scaleFactor = min(widthRatio, heightRatio) // preserve aspect ratio
+
+        let newSize = CGSize(width: self.size.width * scaleFactor,
+                             height: self.size.height * scaleFactor)
+
+        UIGraphicsBeginImageContextWithOptions(newSize, false, self.scale)
+        self.draw(in: CGRect(origin: .zero, size: newSize))
         let newImage = UIGraphicsGetImageFromCurrentImageContext()
         UIGraphicsEndImageContext()
-        return newImage!
+
+        return newImage
     }
+
 }
 
 public extension UIImage {
