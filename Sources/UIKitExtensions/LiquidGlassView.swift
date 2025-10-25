@@ -85,7 +85,13 @@ public class LiquidGlassView: UIView {
     // MARK: - Render Decor Layer
     private func renderDecorLayer() {
         let tempLayer = CALayer()
-
+        let tint = CALayer()
+        tint.backgroundColor = tintColorForGlass.cgColor
+        tint.cornerRadius = cornerRadius
+        tint.compositingFilter = "softLightBlendMode"
+        tint.frame = bounds
+        tempLayer.addSublayer(tint)
+        
         // Darken falloff
         let darken = CAGradientLayer()
         darken.colors = [UIColor.black.withAlphaComponent(0.22).cgColor, UIColor.clear.cgColor]
@@ -158,13 +164,7 @@ public class LiquidGlassView: UIView {
         diff.frame = bounds
         tempLayer.addSublayer(diff)
 
-        // Tint overlay
-        let tint = CALayer()
-        tint.backgroundColor = tintColorForGlass.cgColor
-        tint.cornerRadius = cornerRadius
-        tint.compositingFilter = "softLightBlendMode"
-        tint.frame = bounds
-        tempLayer.addSublayer(tint)
+        
 
         // Render tempLayer to image
         DispatchQueue.global(qos: .userInitiated).async {
