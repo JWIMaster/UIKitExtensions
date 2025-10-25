@@ -134,7 +134,7 @@ public class LiquidGlassView: UIView {
         tempLayer.addSublayer(innerDepth)
 
         // Refract
-        let refract = CAGradientLayer()
+        /*let refract = CAGradientLayer()
         refract.colors = [
             UIColor.white.withAlphaComponent(0.05).cgColor,
             UIColor.clear.cgColor,
@@ -146,7 +146,7 @@ public class LiquidGlassView: UIView {
         refract.cornerRadius = cornerRadius
         refract.compositingFilter = "differenceBlendMode"
         refract.frame = bounds
-        tempLayer.addSublayer(refract)
+        tempLayer.addSublayer(refract)*/
 
         // Rim
         let rim = CALayer()
@@ -157,18 +157,18 @@ public class LiquidGlassView: UIView {
         tempLayer.addSublayer(rim)
 
         // Diffraction
-        let diff = CALayer()
+        /*let diff = CALayer()
         diff.backgroundColor = UIColor.white.withAlphaComponent(0.03).cgColor
         diff.cornerRadius = cornerRadius - 1
         diff.compositingFilter = "differenceBlendMode"
         diff.frame = bounds
-        tempLayer.addSublayer(diff)
+        tempLayer.addSublayer(diff)*/
 
         
-
+        let size = self.bounds.size
         // Render tempLayer to image
         DispatchQueue.global(qos: .userInitiated).async {
-            UIGraphicsBeginImageContextWithOptions(self.bounds.size, false, UIScreen.main.scale)
+            UIGraphicsBeginImageContextWithOptions(size, false, UIScreen.main.scale)
             if let ctx = UIGraphicsGetCurrentContext() {
                 tempLayer.render(in: ctx)
             }
