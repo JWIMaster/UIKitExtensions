@@ -133,21 +133,6 @@ public class LiquidGlassView: UIView {
         innerDepth.frame = bounds
         tempLayer.addSublayer(innerDepth)
 
-        // Refract
-        /*let refract = CAGradientLayer()
-        refract.colors = [
-            UIColor.white.withAlphaComponent(0.05).cgColor,
-            UIColor.clear.cgColor,
-            UIColor.white.withAlphaComponent(0.05).cgColor
-        ]
-        refract.locations = [0.0, 0.1, 1.0]
-        refract.startPoint = CGPoint(x: 0, y: 0)
-        refract.endPoint = CGPoint(x: 1, y: 1)
-        refract.cornerRadius = cornerRadius
-        refract.compositingFilter = "differenceBlendMode"
-        refract.frame = bounds
-        tempLayer.addSublayer(refract)*/
-
         // Rim
         let rim = CALayer()
         rim.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
@@ -156,13 +141,6 @@ public class LiquidGlassView: UIView {
         rim.frame = bounds
         tempLayer.addSublayer(rim)
 
-        // Diffraction
-        /*let diff = CALayer()
-        diff.backgroundColor = UIColor.white.withAlphaComponent(0.03).cgColor
-        diff.cornerRadius = cornerRadius - 1
-        diff.compositingFilter = "differenceBlendMode"
-        diff.frame = bounds
-        tempLayer.addSublayer(diff)*/
 
         
         let size = self.bounds.size

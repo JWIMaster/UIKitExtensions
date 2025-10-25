@@ -19,12 +19,12 @@ public extension UIImage {
         return image
     }
     
-    func resizeImage(_ image: UIImage, targetSize: CGSize) -> UIImage {
+    func resizeImage(toSize targetSize: CGSize) -> UIImage {
         UIGraphicsBeginImageContextWithOptions(targetSize, false, 0.0)
-        image.draw(in: CGRect(origin: .zero, size: targetSize))
+        self.draw(in: CGRect(origin: .zero, size: targetSize))
         let newImage = UIGraphicsGetImageFromCurrentImageContext()
         UIGraphicsEndImageContext()
-        return newImage ?? image
+        return newImage ?? self
     }
 }
 
