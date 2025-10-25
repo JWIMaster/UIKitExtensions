@@ -24,7 +24,7 @@ public extension UIImage {
         self.draw(in: CGRect(origin: .zero, size: targetSize))
         let newImage = UIGraphicsGetImageFromCurrentImageContext()
         UIGraphicsEndImageContext()
-        return newImage ?? self
+        return newImage!
     }
 }
 
