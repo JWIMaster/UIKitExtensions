@@ -19,7 +19,7 @@ public extension UIImage {
         return image
     }
     
-    func resizeImage(toSize targetSize: CGSize) -> UIImage? {
+    func resizeImage(toSize targetSize: CGSize) -> UIImage {
         let widthRatio  = targetSize.width  / self.size.width
         let heightRatio = targetSize.height / self.size.height
         let scaleFactor = min(widthRatio, heightRatio) // preserve aspect ratio
@@ -32,7 +32,7 @@ public extension UIImage {
         let newImage = UIGraphicsGetImageFromCurrentImageContext()
         UIGraphicsEndImageContext()
 
-        return newImage
+        return newImage!
     }
 
 }
