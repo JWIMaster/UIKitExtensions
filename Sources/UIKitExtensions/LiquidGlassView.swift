@@ -40,7 +40,7 @@ public class LiquidGlassView: UIView {
     private static let renderQueue: DispatchQueue = {
         let queue = DispatchQueue(
             label: "com.jwi.LiquidGlassView.renderQueue",
-            attributes: [],
+            attributes: .concurrent,
             target: DispatchQueue.global(qos: .background)
         )
         return queue
