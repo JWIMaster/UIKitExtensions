@@ -336,10 +336,7 @@ public final class LiquidGlassCache {
     // MARK: - Asynchronous store/load using serial queue
     
     public func storeAsync(_ image: CGImage, for key: String) {
-        serialQueue.async { [weak self] in
-            guard let self = self else { return }
-            self.memoryCache.setObject(image, forKey: key as NSString)
-            
+        serialQueue.async {
             let url = self.filePath(forKey: key)
             let uiImage = UIImage(cgImage: image)
             if let data = uiImage.pngData() {
@@ -347,28 +344,23 @@ public final class LiquidGlassCache {
             }
         }
     }
-    
+
     public func loadAsync(for key: String, completion: @escaping (CGImage?) -> Void) {
-        serialQueue.async { [weak self] in
-            guard let self = self else { return }
+        serialQueue.async {
+            let url = self.filePath(forKey: key)
             var image: CGImage? = nil
-            
-            if let cached = self.memoryCache.object(forKey: key as NSString) {
-                image = cached
-            } else {
-                let url = self.filePath(forKey: key)
-                if let data = try? Data(contentsOf: url),
-                   let diskImage = UIImage(data: data)?.cgImage {
-                    self.memoryCache.setObject(diskImage, forKey: key as NSString)
-                    image = diskImage
-                }
+
+            if let data = try? Data(contentsOf: url),
+               let diskImage = UIImage(data: data)?.cgImage {
+                image = diskImage
             }
-            
+
             DispatchQueue.main.async {
                 completion(image)
             }
         }
     }
+
     
     public func exists(for key: String) -> Bool {
         var found = false
