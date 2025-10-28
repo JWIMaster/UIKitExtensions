@@ -144,14 +144,15 @@ public class LiquidGlassView: UIView {
         
         let size = self.bounds.size
         // Render tempLayer to image
-        LiquidGlassView.renderQueue.async {
+        LiquidGlassView.renderQueue.async { [weak self] in
+            guard let self = self else { return }
             UIGraphicsBeginImageContextWithOptions(size, false, UIScreen.main.scale)
             if let ctx = UIGraphicsGetCurrentContext() {
                 tempLayer.render(in: ctx)
             }
             let renderedImage = UIGraphicsGetImageFromCurrentImageContext()?.cgImage
             UIGraphicsEndImageContext()
-
+            tempLayer.sublayers?.removeAll()
             DispatchQueue.main.async {
                 self.decorLayer.contents = renderedImage
             }
@@ -187,10 +188,8 @@ public class LiquidGlassView: UIView {
     }
 
     private func applySaturationBoost() {
-#if canImport(GPUImage1Swift)
         saturationFilter = GPUImageSaturationFilter()
         saturationFilter?.saturation = saturationBoost
-#endif
     }
 }
 
