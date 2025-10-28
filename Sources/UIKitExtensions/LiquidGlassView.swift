@@ -60,10 +60,14 @@ public class LiquidGlassView: UIView {
         } else {
             solidView = UIView()
         }
-
+        LiquidGlassView.renderCache.evictsObjectsWithDiscardedContent = false
+        LiquidGlassView.renderCache.countLimit = 200
+        LiquidGlassView.renderCache.totalCostLimit = 50_000_000
         setupView()
         renderDecorLayer()
         applySaturationBoost()
+        
+        
     }
 
     required init?(coder: NSCoder) {
