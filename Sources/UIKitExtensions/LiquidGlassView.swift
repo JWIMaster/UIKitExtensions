@@ -3,8 +3,6 @@ import GPUImage1Swift
 import LiveFrost
 import FoundationCompatKit
 
-public typealias DispatchWorkItem = FoundationCompatKit.DispatchWorkItem
-
 public class LiquidGlassView: UIView {
 
     public var cornerRadius: CGFloat = 50 { didSet { updateCornersAndShadow() } }
@@ -148,9 +146,7 @@ public class LiquidGlassView: UIView {
         
         let size = self.bounds.size
         // Render tempLayer to image
-        var task: DispatchWorkItem! = nil
-        
-        task = DispatchWorkItem { [weak self] in
+        LiquidGlassView.renderQueue.async { [weak self] in
             guard let self = self, self.window != nil else { return }
             
             UIGraphicsBeginImageContextWithOptions(size, false, UIScreen.main.scale)
@@ -160,27 +156,12 @@ public class LiquidGlassView: UIView {
             let renderedImage = UIGraphicsGetImageFromCurrentImageContext()?.cgImage
             UIGraphicsEndImageContext()
             tempLayer.sublayers?.removeAll()
-            
             DispatchQueue.main.async {
-                guard !task.isCancelled else { return }
                 self.decorLayer.contents = renderedImage
             }
         }
-        
-        // Assign task and queue it
-        renderTask = task
-        LiquidGlassView.allRenderTasks.append(task)
-        LiquidGlassView.renderQueue.async(execute: task)
-    }
-    
-    public static func cancelAllRenders() {
-        for task in allRenderTasks {
-            task.cancel()
-        }
-        allRenderTasks.removeAll()
     }
 
-    
     // MARK: - Layout
     public override func layoutSubviews() {
         super.layoutSubviews()
