@@ -114,7 +114,7 @@ public class LiquidGlassView: UIView {
             return
         }
         
-        guard bounds.width > 0, bounds.height > 0 else {
+        guard bounds.width > 0, bounds.height > 0, self.window != nil else {
             print("Skipping render — zero bounds: \(bounds)")
             return
         }
@@ -183,7 +183,7 @@ public class LiquidGlassView: UIView {
 
         // Render background asynchronously
         LiquidGlassView.renderQueue.async { [weak self] in
-            guard let self = self, self.window != nil else { return }
+            guard let self = self else { return }
 
             UIGraphicsBeginImageContextWithOptions(size, false, UIScreen.main.scale)
             if let ctx = UIGraphicsGetCurrentContext() {
