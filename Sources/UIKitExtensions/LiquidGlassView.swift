@@ -18,8 +18,6 @@ public class LiquidGlassView: UIView {
     public weak var snapshotTargetView: UIView? { didSet { blurView?.snapshotTargetView = snapshotTargetView } }
     public var tintColorForGlass: UIColor = UIColor.blue.withAlphaComponent(0.05) {
         didSet {
-            let oldKey = cacheKey(for: bounds.size, tint: oldValue)
-            LiquidGlassView.renderCache.removeObject(forKey: oldKey)
             renderDecorLayer()
         }
     }
@@ -37,13 +35,12 @@ public class LiquidGlassView: UIView {
     
     private static let renderCache = NSCache<NSString, CGImage>()
 
-    private func cacheKey(for size: CGSize, tint: UIColor) -> NSString {
+    private func cacheKey(for size: CGSize) -> NSString {
         let scale = UIScreen.main.scale
         // Round size to avoid floating-point inaccuracies
         let w = Int(size.width * scale)
         let h = Int(size.height * scale)
-        let colorHash = tint.hashValue
-        return "\(w)x\(h)_\(colorHash)" as NSString
+        return "\(w)x\(h)" as NSString
     }
 
     
@@ -102,23 +99,18 @@ public class LiquidGlassView: UIView {
     // MARK: - Render Decor Layer
     private func renderDecorLayer() {
         let size = bounds.size
-        let key = cacheKey(for: size, tint: tintColorForGlass)
-        
+        let key = cacheKey(for: size)
+
+        // Reuse cached base image (no tint)
         if let cachedImage = LiquidGlassView.renderCache.object(forKey: key) {
+            print("usedcache")
             decorLayer.contents = cachedImage
+            applyTintLayer()
             return
         }
-        
-        
-        
+
         let tempLayer = CALayer()
-        let tint = CALayer()
-        tint.backgroundColor = tintColorForGlass.cgColor
-        tint.cornerRadius = cornerRadius
-        tint.compositingFilter = "softLightBlendMode"
-        tint.frame = bounds
-        tempLayer.addSublayer(tint)
-        
+
         // Darken falloff
         let darken = CAGradientLayer()
         darken.colors = [UIColor.black.withAlphaComponent(0.22).cgColor, UIColor.clear.cgColor]
@@ -168,11 +160,10 @@ public class LiquidGlassView: UIView {
         rim.frame = bounds
         tempLayer.addSublayer(rim)
 
-
-        
+        // Render background asynchronously
         LiquidGlassView.renderQueue.async { [weak self] in
             guard let self = self, self.window != nil else { return }
-            
+
             UIGraphicsBeginImageContextWithOptions(size, false, UIScreen.main.scale)
             if let ctx = UIGraphicsGetCurrentContext() {
                 tempLayer.render(in: ctx)
@@ -183,14 +174,31 @@ public class LiquidGlassView: UIView {
             }
             UIGraphicsEndImageContext()
             tempLayer.sublayers?.removeAll()
-            
+
             LiquidGlassView.renderCache.setObject(renderedImage, forKey: key)
-            
+
             DispatchQueue.main.async {
                 self.decorLayer.contents = renderedImage
+                self.applyTintLayer()
             }
         }
     }
+
+    private func applyTintLayer() {
+        // Remove any existing tint layer
+        decorLayer.sublayers?.removeAll(where: { $0.name == "tintLayer" })
+
+        let tintLayer = CALayer()
+        tintLayer.name = "tintLayer"
+        tintLayer.backgroundColor = tintColorForGlass.cgColor
+        tintLayer.frame = bounds
+        tintLayer.cornerRadius = cornerRadius
+        tintLayer.masksToBounds = true
+        tintLayer.compositingFilter = "softLightBlendMode"
+
+        decorLayer.addSublayer(tintLayer)
+    }
+
 
     // MARK: - Layout
     public override func layoutSubviews() {
