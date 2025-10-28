@@ -34,6 +34,8 @@ public class LiquidGlassView: UIView {
     private static let renderQueue = DispatchQueue(label: "com.yourapp.liquidglass.render")
     
     private static let renderCache = NSCache<NSString, CGImage>()
+    
+    private var lastRenderedSize: CGSize = .zero
 
     private func cacheKey(for size: CGSize) -> NSString {
         let scale = UIScreen.main.scale
@@ -211,7 +213,10 @@ public class LiquidGlassView: UIView {
         blurView?.frame = bounds
         solidView?.frame = bounds
         decorLayer.frame = bounds
-        renderDecorLayer()
+        if bounds.size != lastRenderedSize {
+            lastRenderedSize = bounds.size
+            renderDecorLayer()
+        }
         
         layer.shadowPath = UIBezierPath(
             roundedRect: bounds,
