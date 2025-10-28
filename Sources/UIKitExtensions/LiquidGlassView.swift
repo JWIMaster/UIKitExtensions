@@ -109,19 +109,19 @@ public class LiquidGlassView: UIView {
 
         // Reuse cached base image (no tint)
         if let cachedImage = self.renderCache.object(forKey: key) {
-            print("usedcache")
+            //print("usedcache")
             decorLayer.contents = cachedImage
             return
         }
         
         guard bounds.width > 0, bounds.height > 0 else {
-            print("Skipping render — zero bounds: \(bounds)")
+            //print("Skipping render — zero bounds: \(bounds)")
             return
         }
         
         guard self.window != nil else {
-            print("Skipping render - no parent window")
-            return 
+            //print("Skipping render - no parent window")
+            return
         }
 
         
