@@ -28,8 +28,6 @@ public class LiquidGlassView: UIView {
     private var saturationFilter: GPUImageSaturationFilter?
 
     private static let renderQueue = DispatchQueue(label: "com.yourapp.liquidglass.render", attributes: .concurrent, target: .global(qos: .userInitiated))
-    private var renderTask: DispatchWorkItem?
-    private static var allRenderTasks = [DispatchWorkItem]()
     
     // MARK: - Init
     public init(blurRadius: CGFloat = 12, cornerRadius: CGFloat = 50, snapshotTargetView: UIView?, disableBlur: Bool = false) {
