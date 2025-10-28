@@ -39,12 +39,13 @@ public class LiquidGlassView: UIView {
     
     private var lastRenderedSize: CGSize = .zero
 
-    private func cacheKey(for size: CGSize) -> NSString {
+    private func cacheKey(for size: CGSize, color: UIColor) -> NSString {
         let scale = UIScreen.main.scale
         // Round size to avoid floating-point inaccuracies
         let w = Int(size.width * scale)
         let h = Int(size.height * scale)
-        return "\(w)x\(h)" as NSString
+        let colorHex = color.hexValue
+        return "\(w)x\(h)_\(colorHex)" as NSString
     }
 
     
@@ -104,13 +105,12 @@ public class LiquidGlassView: UIView {
     // MARK: - Render Decor Layer
     private func renderDecorLayer() {
         let size = bounds.size
-        let key = cacheKey(for: size)
+        let key = cacheKey(for: size, color: self.tintColorForGlass)
 
         // Reuse cached base image (no tint)
         if let cachedImage = self.renderCache.object(forKey: key) {
             print("usedcache")
             decorLayer.contents = cachedImage
-            //applyTintLayer()
             return
         }
         
@@ -122,7 +122,16 @@ public class LiquidGlassView: UIView {
         
         print("\(Date()) render \(key)")
         let tempLayer = CALayer()
-
+        
+        let tintLayer = CALayer()
+        tintLayer.name = "tintLayer"
+        tintLayer.backgroundColor = tintColorForGlass.cgColor
+        tintLayer.frame = bounds
+        tintLayer.cornerRadius = cornerRadius
+        tintLayer.masksToBounds = true
+        tintLayer.compositingFilter = "softLightBlendMode"
+        tempLayer.addSublayer(tintLayer)
+        
         // Darken falloff
         let darken = CAGradientLayer()
         darken.colors = [UIColor.black.withAlphaComponent(0.22).cgColor, UIColor.clear.cgColor]
@@ -191,26 +200,10 @@ public class LiquidGlassView: UIView {
 
             DispatchQueue.main.async {
                 self.decorLayer.contents = renderedImage
-                //self.applyTintLayer()
             }
         }
     }
 
-    private func applyTintLayer() {
-        // Remove any existing tint layer
-        print("doingtintstuff")
-        decorLayer.sublayers?.removeAll(where: { $0.name == "tintLayer" })
-
-        let tintLayer = CALayer()
-        tintLayer.name = "tintLayer"
-        tintLayer.backgroundColor = tintColorForGlass.cgColor
-        tintLayer.frame = bounds
-        tintLayer.cornerRadius = cornerRadius
-        tintLayer.masksToBounds = true
-        tintLayer.compositingFilter = "softLightBlendMode"
-
-        decorLayer.addSublayer(tintLayer)
-    }
 
 
     // MARK: - Layout
