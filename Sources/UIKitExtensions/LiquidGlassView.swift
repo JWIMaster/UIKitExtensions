@@ -27,7 +27,7 @@ public class LiquidGlassView: UIView {
     private var decorLayer = CALayer()
     private var saturationFilter: GPUImageSaturationFilter?
 
-    private static let renderQueue = DispatchQueue(label: "com.yourapp.liquidglass.render", attributes: .concurrent, target: .global(qos: .userInitiated))
+    private static let renderQueue = DispatchQueue(label: "com.yourapp.liquidglass.render")
 
     // MARK: - Init
     public init(blurRadius: CGFloat = 12, cornerRadius: CGFloat = 50, snapshotTargetView: UIView?, disableBlur: Bool = false) {
