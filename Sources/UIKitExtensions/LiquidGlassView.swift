@@ -33,8 +33,8 @@ public class LiquidGlassView: UIView {
 
     private static let renderQueue = DispatchQueue(label: "com.yourapp.liquidglass.render")
     
-    private var renderCache: NSMapTable<NSString, CGImage> {
-        LiquidGlassCache.shared.mapTable
+    private var renderCache: NSCache<NSString, CGImage> {
+        LiquidGlassCache.shared.cache
     }
     
     private var lastRenderedSize: CGSize = .zero
@@ -113,6 +113,12 @@ public class LiquidGlassView: UIView {
             applyTintLayer()
             return
         }
+        
+        guard bounds.width > 0, bounds.height > 0 else {
+            print("Skipping render — zero bounds: \(bounds)")
+            return nil
+        }
+
         
         print("\(Date()) render \(key)")
         let tempLayer = CALayer()
@@ -273,14 +279,12 @@ fileprivate extension UIColor {
 
 public final class LiquidGlassCache {
     public static let shared = LiquidGlassCache()
+    public let cache = NSCache<NSString, CGImage>()
 
-    // Strong-to-strong mapping (no automatic eviction)
-    public let mapTable = NSMapTable<NSString, CGImage>(
-        keyOptions: .strongMemory,
-        valueOptions: .strongMemory
-    )
-
-    private init() {}
+    public init() {
+        cache.countLimit = 300
+        cache.totalCostLimit = 80_000_000
+    }
 }
 
 
