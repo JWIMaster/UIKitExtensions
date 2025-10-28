@@ -16,7 +16,13 @@ public class LiquidGlassView: UIView {
     public var frameInterval: Int = 3 { didSet { blurView?.frameInterval = UInt(frameInterval) } }
     public var isLiveBlurring: Bool = true { didSet { blurView?.isLiveBlurring = isLiveBlurring } }
     public weak var snapshotTargetView: UIView? { didSet { blurView?.snapshotTargetView = snapshotTargetView } }
-    public var tintColorForGlass: UIColor = UIColor.blue.withAlphaComponent(0.05) { didSet { renderDecorLayer() } }
+    public var tintColorForGlass: UIColor = UIColor.blue.withAlphaComponent(0.05) {
+        didSet {
+            let oldKey = cacheKey(for: bounds.size, tint: oldValue)
+            LiquidGlassView.renderCache.removeObject(forKey: oldKey)
+            renderDecorLayer()
+        }
+    }
     public var solidViewColour: UIColor = .clear { didSet { solidView?.backgroundColor = solidViewColour } }
     public var disableBlur: Bool = false
 
@@ -95,6 +101,16 @@ public class LiquidGlassView: UIView {
 
     // MARK: - Render Decor Layer
     private func renderDecorLayer() {
+        let size = bounds.size
+        let key = cacheKey(for: size, tint: tintColorForGlass)
+        
+        if let cachedImage = LiquidGlassView.renderCache.object(forKey: key) {
+            decorLayer.contents = cachedImage
+            return
+        }
+        
+        
+        
         let tempLayer = CALayer()
         let tint = CALayer()
         tint.backgroundColor = tintColorForGlass.cgColor
@@ -154,17 +170,8 @@ public class LiquidGlassView: UIView {
 
 
         
-        let size = self.bounds.size
-        // Render tempLayer to image
         LiquidGlassView.renderQueue.async { [weak self] in
             guard let self = self, self.window != nil else { return }
-            
-            let key = self.cacheKey(for: size, tint: self.tintColorForGlass)
-            
-            if let cachedImage = LiquidGlassView.renderCache.object(forKey: key) {
-                self.decorLayer.contents = cachedImage
-                return
-            }
             
             UIGraphicsBeginImageContextWithOptions(size, false, UIScreen.main.scale)
             if let ctx = UIGraphicsGetCurrentContext() {
