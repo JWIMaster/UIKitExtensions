@@ -191,7 +191,7 @@ public class LiquidGlassView: UIView {
 
             DispatchQueue.main.async {
                 self.decorLayer.contents = renderedImage
-                self.applyTintLayer()
+                //self.applyTintLayer()
             }
         }
     }
