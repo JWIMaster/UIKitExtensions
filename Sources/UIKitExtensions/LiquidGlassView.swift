@@ -198,6 +198,7 @@ public class LiquidGlassView: UIView {
 
     private func applyTintLayer() {
         // Remove any existing tint layer
+        print("doingtintstuff")
         decorLayer.sublayers?.removeAll(where: { $0.name == "tintLayer" })
 
         let tintLayer = CALayer()
