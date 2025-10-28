@@ -29,6 +29,18 @@ public class LiquidGlassView: UIView {
 
     private static let renderQueue = DispatchQueue(label: "com.yourapp.liquidglass.render", attributes: .concurrent, target: .global(qos: .userInitiated))
     
+    private static let renderCache = NSCache<NSString, CGImage>()
+
+    private func cacheKey(for size: CGSize, tint: UIColor) -> NSString {
+        let scale = UIScreen.main.scale
+        // Round size to avoid floating-point inaccuracies
+        let w = Int(size.width * scale)
+        let h = Int(size.height * scale)
+        let colorHash = tint.hashValue
+        return "\(w)x\(h)_\(colorHash)" as NSString
+    }
+
+    
     // MARK: - Init
     public init(blurRadius: CGFloat = 12, cornerRadius: CGFloat = 50, snapshotTargetView: UIView?, disableBlur: Bool = false) {
         super.init(frame: .zero)
@@ -147,6 +159,13 @@ public class LiquidGlassView: UIView {
         LiquidGlassView.renderQueue.async { [weak self] in
             guard let self = self, self.window != nil else { return }
             
+            let key = self.cacheKey(for: size, tint: self.tintColorForGlass)
+            
+            if let cachedImage = LiquidGlassView.renderCache.object(forKey: key) {
+                self.decorLayer.contents = cachedImage
+                return
+            }
+            
             UIGraphicsBeginImageContextWithOptions(size, false, UIScreen.main.scale)
             if let ctx = UIGraphicsGetCurrentContext() {
                 tempLayer.render(in: ctx)
@@ -154,6 +173,9 @@ public class LiquidGlassView: UIView {
             let renderedImage = UIGraphicsGetImageFromCurrentImageContext()?.cgImage
             UIGraphicsEndImageContext()
             tempLayer.sublayers?.removeAll()
+            
+            LiquidGlassView.renderCache.setObject(renderedImage!, forKey: key)
+            
             DispatchQueue.main.async {
                 self.decorLayer.contents = renderedImage
             }
