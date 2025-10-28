@@ -108,7 +108,8 @@ public class LiquidGlassView: UIView {
             applyTintLayer()
             return
         }
-
+        
+        print("\(Date()) render")
         let tempLayer = CALayer()
 
         // Darken falloff
