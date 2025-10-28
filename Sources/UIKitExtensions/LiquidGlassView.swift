@@ -125,7 +125,7 @@ public class LiquidGlassView: UIView {
         }
 
         
-        print("\(Date()) render \(key)")
+        //print("\(Date()) render \(key)")
         let tempLayer = CALayer()
         
         let tintLayer = CALayer()
