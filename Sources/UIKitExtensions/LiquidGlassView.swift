@@ -28,8 +28,6 @@ public class LiquidGlassView: UIView {
     private var saturationFilter: GPUImageSaturationFilter?
 
     private static let renderQueue = DispatchQueue(label: "com.yourapp.liquidglass.render", attributes: .concurrent, target: .global(qos: .userInitiated))
-    private static let renderSemaphore = DispatchSemaphore(value: 4)
-
     // MARK: - Init
     public init(blurRadius: CGFloat = 12, cornerRadius: CGFloat = 50, snapshotTargetView: UIView?, disableBlur: Bool = false) {
         super.init(frame: .zero)
@@ -147,9 +145,6 @@ public class LiquidGlassView: UIView {
         // Render tempLayer to image
         LiquidGlassView.renderQueue.async { [weak self] in
             guard let self = self, self.window != nil else { return }
-            
-            LiquidGlassView.renderSemaphore.wait()
-            defer { LiquidGlassView.renderSemaphore.signal() }
             
             UIGraphicsBeginImageContextWithOptions(size, false, UIScreen.main.scale)
             if let ctx = UIGraphicsGetCurrentContext() {
