@@ -33,7 +33,9 @@ public class LiquidGlassView: UIView {
 
     private static let renderQueue = DispatchQueue(label: "com.yourapp.liquidglass.render")
     
-    private static let renderCache = NSCache<NSString, CGImage>()
+    private var renderCache: NSCache<NSString, CGImage> {
+        LiquidGlassCache.shared.cache
+    }
     
     private var lastRenderedSize: CGSize = .zero
 
@@ -62,9 +64,6 @@ public class LiquidGlassView: UIView {
         } else {
             solidView = UIView()
         }
-        LiquidGlassView.renderCache.evictsObjectsWithDiscardedContent = false
-        LiquidGlassView.renderCache.countLimit = 200
-        LiquidGlassView.renderCache.totalCostLimit = 50_000_000
         setupView()
         renderDecorLayer()
         applySaturationBoost()
@@ -108,7 +107,7 @@ public class LiquidGlassView: UIView {
         let key = cacheKey(for: size)
 
         // Reuse cached base image (no tint)
-        if let cachedImage = LiquidGlassView.renderCache.object(forKey: key) {
+        if let cachedImage = self.renderCache.object(forKey: key) {
             print("usedcache")
             decorLayer.contents = cachedImage
             applyTintLayer()
@@ -182,7 +181,7 @@ public class LiquidGlassView: UIView {
             UIGraphicsEndImageContext()
             tempLayer.sublayers?.removeAll()
 
-            LiquidGlassView.renderCache.setObject(renderedImage, forKey: key)
+            self.renderCache.setObject(renderedImage, forKey: key)
 
             DispatchQueue.main.async {
                 self.decorLayer.contents = renderedImage
@@ -269,6 +268,16 @@ fileprivate extension UIColor {
         let bi = UInt32(b * 255) << 8
         let ai = UInt32(a * 255)
         return ri | gi | bi | ai
+    }
+}
+
+public final class LiquidGlassCache {
+    public static let shared = LiquidGlassCache()
+    public let cache = NSCache<NSString, CGImage>()
+
+    public init() {
+        cache.countLimit = 300
+        cache.totalCostLimit = 80_000_000
     }
 }
 
