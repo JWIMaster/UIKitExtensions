@@ -3,9 +3,6 @@ import GPUImage1Swift
 import LiveFrost
 import FoundationCompatKit
 
-import UIKit
-import GPUImage1Swift
-
 public class LiquidGlassView: UIView {
 
     public var cornerRadius: CGFloat = 50 { didSet { updateCornersAndShadow() } }
@@ -29,6 +26,8 @@ public class LiquidGlassView: UIView {
     
     private var decorLayer = CALayer()
     private var saturationFilter: GPUImageSaturationFilter?
+
+    private static let renderQueue = DispatchQueue(label: "com.yourapp.liquidglass.render", attributes: .concurrent, target: .global(qos: .userInitiated))
 
     // MARK: - Init
     public init(blurRadius: CGFloat = 12, cornerRadius: CGFloat = 50, snapshotTargetView: UIView?, disableBlur: Bool = false) {
@@ -145,7 +144,7 @@ public class LiquidGlassView: UIView {
         
         let size = self.bounds.size
         // Render tempLayer to image
-        DispatchQueue.global(qos: .userInitiated).async {
+        LiquidGlassView.renderQueue.async {
             UIGraphicsBeginImageContextWithOptions(size, false, UIScreen.main.scale)
             if let ctx = UIGraphicsGetCurrentContext() {
                 tempLayer.render(in: ctx)
@@ -223,129 +222,4 @@ fileprivate extension UIColor {
     }
 }
 
-public final class LiquidGlassCache {
-    public static let shared = LiquidGlassCache()
-    public let memoryCache = NSCache<NSString, CGImage>()
-    
-    private let serialQueue: DispatchQueue = {
-        let queue = DispatchQueue(
-            label: "com.jwi.LiquidGlassCache",
-            attributes: .concurrent,
-            target: DispatchQueue.global(qos: .background)
-        )
-        return queue
-    }()
-
-    
-    let cacheDirectory: String = {
-        let dirs = NSSearchPathForDirectoriesInDomains(.cachesDirectory, .userDomainMask, true)
-        return dirs.first ?? NSTemporaryDirectory()
-    }()
-    
-    public func filePath(forKey key: String) -> URL {
-        return URL(fileURLWithPath: cacheDirectory + "/" + key + ".png")
-    }
-    
-    // MARK: - Synchronous store/load
-    
-    public func store(_ image: CGImage, for key: String) {
-        memoryCache.setObject(image, forKey: key as NSString)
-        
-        let url = filePath(forKey: key)
-        let uiImage = UIImage(cgImage: image)
-        if let data = uiImage.pngData() {
-            try? data.write(to: url, options: .atomic)
-        }
-    }
-    
-    public func load(for key: String) -> CGImage? {
-        if let cached = memoryCache.object(forKey: key as NSString) {
-            return cached
-        }
-        let url = filePath(forKey: key)
-        if let data = try? Data(contentsOf: url),
-           let image = UIImage(data: data)?.cgImage {
-            memoryCache.setObject(image, forKey: key as NSString)
-            return image
-        }
-        return nil
-    }
-    
-    // MARK: - Asynchronous store/load using serial queue
-    
-    public func storeAsync(_ image: CGImage, for key: String) {
-        serialQueue.async {
-            let url = self.filePath(forKey: key)
-            let uiImage = UIImage(cgImage: image)
-            if let data = uiImage.pngData() {
-                try? data.write(to: url, options: .atomic)
-            }
-        }
-    }
-
-    public func loadAsync(for key: String, completion: @escaping (CGImage?) -> Void) {
-        serialQueue.async {
-            let url = self.filePath(forKey: key)
-            var image: CGImage? = nil
-
-            if let data = try? Data(contentsOf: url),
-               let diskImage = UIImage(data: data)?.cgImage {
-                image = diskImage
-            }
-
-            DispatchQueue.main.async {
-                completion(image)
-            }
-        }
-    }
-    
-    /*public func storeAsync(_ image: CGImage, for key: String) {
-        serialQueue.async { [weak self] in
-            guard let self = self else { return }
-            self.memoryCache.setObject(image, forKey: key as NSString)
-            
-            let url = self.filePath(forKey: key)
-            let uiImage = UIImage(cgImage: image)
-            if let data = uiImage.pngData() {
-                try? data.write(to: url, options: .atomic)
-            }
-        }
-    }
-    
-    public func loadAsync(for key: String, completion: @escaping (CGImage?) -> Void) {
-        serialQueue.async { [weak self] in
-            guard let self = self else { return }
-            var image: CGImage? = nil
-            
-            if let cached = self.memoryCache.object(forKey: key as NSString) {
-                image = cached
-            } else {
-                let url = self.filePath(forKey: key)
-                if let data = try? Data(contentsOf: url),
-                   let diskImage = UIImage(data: data)?.cgImage {
-                    self.memoryCache.setObject(diskImage, forKey: key as NSString)
-                    image = diskImage
-                }
-            }
-            
-            DispatchQueue.main.async {
-                completion(image)
-            }
-        }
-    }*/
-    
-    public func exists(for key: String) -> Bool {
-        var found = false
-        serialQueue.sync {
-            if memoryCache.object(forKey: key as NSString) != nil {
-                found = true
-            } else {
-                let url = filePath(forKey: key)
-                found = FileManager.default.fileExists(atPath: url.path)
-            }
-        }
-        return found
-    }
-
-}
 
