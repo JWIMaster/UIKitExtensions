@@ -116,7 +116,7 @@ public class LiquidGlassView: UIView {
         
         guard bounds.width > 0, bounds.height > 0 else {
             print("Skipping render — zero bounds: \(bounds)")
-            return nil
+            return
         }
 
         
