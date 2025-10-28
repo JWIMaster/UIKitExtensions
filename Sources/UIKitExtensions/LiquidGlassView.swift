@@ -170,11 +170,14 @@ public class LiquidGlassView: UIView {
             if let ctx = UIGraphicsGetCurrentContext() {
                 tempLayer.render(in: ctx)
             }
-            let renderedImage = UIGraphicsGetImageFromCurrentImageContext()?.cgImage
+            guard let renderedImage = UIGraphicsGetImageFromCurrentImageContext()?.cgImage else {
+                UIGraphicsEndImageContext()
+                return
+            }
             UIGraphicsEndImageContext()
             tempLayer.sublayers?.removeAll()
             
-            LiquidGlassView.renderCache.setObject(renderedImage!, forKey: key)
+            LiquidGlassView.renderCache.setObject(renderedImage, forKey: key)
             
             DispatchQueue.main.async {
                 self.decorLayer.contents = renderedImage
