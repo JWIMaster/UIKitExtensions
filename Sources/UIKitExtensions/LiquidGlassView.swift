@@ -114,7 +114,7 @@ public class LiquidGlassView: UIView {
             return
         }
         
-        print("\(Date()) render")
+        print("\(Date()) render \(key)")
         let tempLayer = CALayer()
 
         // Darken falloff
