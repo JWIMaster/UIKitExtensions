@@ -110,7 +110,7 @@ public class LiquidGlassView: UIView {
         if let cachedImage = self.renderCache.object(forKey: key) {
             print("usedcache")
             decorLayer.contents = cachedImage
-            applyTintLayer()
+            //applyTintLayer()
             return
         }
         
