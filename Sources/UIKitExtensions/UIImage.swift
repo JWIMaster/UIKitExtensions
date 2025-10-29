@@ -27,20 +27,20 @@ public extension UIImage {
         return newImage ?? image
     }
     
-    static func downsample(imageData: Data, to pointSize: CGSize, scale: CGFloat = UIScreen.main.scale) -> UIImage? {
-        let options: [CFString: Any] = [
+    func getThumbnail() -> UIImage? {
+        guard let imageData = self.pngData() else { return nil } // this could be raw data already
+        let options = [
+            kCGImageSourceCreateThumbnailWithTransform: true,
             kCGImageSourceCreateThumbnailFromImageAlways: true,
-            kCGImageSourceThumbnailMaxPixelSize: max(pointSize.width, pointSize.height) * scale,
-            kCGImageSourceCreateThumbnailWithTransform: true
-        ]
-        
+            kCGImageSourceThumbnailMaxPixelSize: 300
+        ] as CFDictionary
         guard let source = CGImageSourceCreateWithData(imageData as CFData, nil),
-              let cgImage = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary) else {
+              let imageReference = CGImageSourceCreateThumbnailAtIndex(source, 0, options) else {
             return nil
         }
-        
-        return UIImage(cgImage: cgImage)
+        return UIImage(cgImage: imageReference)
     }
+
 }
 
 public extension UIImage {
