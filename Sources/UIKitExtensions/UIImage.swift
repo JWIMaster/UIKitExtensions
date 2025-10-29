@@ -27,12 +27,31 @@ public extension UIImage {
         return newImage ?? image
     }
     
-    func getThumbnail() -> UIImage? {
+    enum ThumbnailQuality {
+        case low, medium, high, full
+    }
+    
+    
+    func getThumbnail(ofQuality quality: ThumbnailQuality) -> UIImage? {
         guard let imageData = self.pngData() else { return nil } // this could be raw data already
+        
+        let maxPixelSize: CGFloat = {
+            switch quality {
+            case .low:
+                return 300
+            case .medium:
+                return 400
+            case .high:
+                return 600
+            case .full:
+                return 4000
+            }
+        }()
+        
         let options = [
             kCGImageSourceCreateThumbnailWithTransform: true,
             kCGImageSourceCreateThumbnailFromImageAlways: true,
-            kCGImageSourceThumbnailMaxPixelSize: 300
+            kCGImageSourceThumbnailMaxPixelSize: maxPixelSize
         ] as CFDictionary
         guard let source = CGImageSourceCreateWithData(imageData as CFData, nil),
               let imageReference = CGImageSourceCreateThumbnailAtIndex(source, 0, options) else {
