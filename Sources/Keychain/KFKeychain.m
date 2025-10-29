@@ -10,7 +10,7 @@
     return [@{(__bridge id)kSecClass : (__bridge id)kSecClassGenericPassword,
               (__bridge id)kSecAttrService : key,
               (__bridge id)kSecAttrAccount : key,
-              (__bridge id)kSecAttrAccessible : (__bridge id)kSecAttrAccessibleAfterFirstUnlock
+              (__bridge id)kSecAttrAccessible : (__bridge id)kSecAttrAccessibleAlways
               } mutableCopy];
 }
 
