@@ -26,6 +26,21 @@ public extension UIImage {
         UIGraphicsEndImageContext()
         return newImage ?? image
     }
+    
+    func downsample(imageData: Data, to pointSize: CGSize, scale: CGFloat = UIScreen.main.scale) -> UIImage? {
+        let options: [CFString: Any] = [
+            kCGImageSourceCreateThumbnailFromImageAlways: true,
+            kCGImageSourceThumbnailMaxPixelSize: max(pointSize.width, pointSize.height) * scale,
+            kCGImageSourceCreateThumbnailWithTransform: true
+        ]
+        
+        guard let source = CGImageSourceCreateWithData(imageData as CFData, nil),
+              let cgImage = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary) else {
+            return nil
+        }
+        
+        return UIImage(cgImage: cgImage)
+    }
 }
 
 public extension UIImage {
