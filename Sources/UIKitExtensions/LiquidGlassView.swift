@@ -130,7 +130,7 @@ public class LiquidGlassView: UIView {
         
         let tintLayer = CALayer()
         tintLayer.name = "tintLayer"
-        tintLayer.backgroundColor = tintColorForGlass.cgColor
+        tintLayer.backgroundColor = tintColorForGlass.withIncreasedSaturation(factor: 1.1).cgColor
         tintLayer.frame = bounds
         tintLayer.cornerRadius = cornerRadius
         tintLayer.masksToBounds = true
