@@ -97,7 +97,8 @@ public class LiquidGlassView: UIView {
 
         if !disableBlur {
             if #available(iOS 14.0, *) {
-                let blur = VisualEffectView(effect: UIBlurEffect(style: .dark))
+                let blur = VisualEffectView()
+                blur.colorTint = .clear
                 blur.blurRadius = blurRadius
                 blurView = blur
             } else if #available(iOS 8.0, *) {
