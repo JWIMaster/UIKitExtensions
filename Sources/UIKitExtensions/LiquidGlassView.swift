@@ -15,6 +15,8 @@ public class LiquidGlassView: UIView {
         didSet {
             if let blurView = self.blurView as? LFGlassView {
                 blurView.blurRadius = blurRadius
+            } else if #available(iOS 14.0, *), let blurView = self.blurView as? VisualEffectView {
+                blurView.blurRadius = blurRadius
             } else if #available(iOS 8.0, *), let blurView = self.blurView as? CustomBlurEffectView {
                 blurView.blurRadius = blurRadius
             }
