@@ -86,11 +86,16 @@ open class CustomBlurEffectView: UIView {
     }()
     
     /// Blur effect for IOS >= 14
-    private lazy var customBlurEffect_ios14: CustomBlurEffect = {
+    private lazy var customBlurEffect_ios14: CustomBlurEffect = makeBlurEffect()
+
+    
+    private func makeBlurEffect() -> CustomBlurEffect {
         let effect = CustomBlurEffect.effect(with: .extraLight)
         effect.blurRadius = blurRadius
         return effect
-    }()
+    }
+
+    
     
     /// Blur effect for IOS < 14
     private lazy var customBlurEffect: UIKit.UIBlurEffect = {
