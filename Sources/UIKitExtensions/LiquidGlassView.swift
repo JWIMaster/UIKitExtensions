@@ -17,7 +17,7 @@ public class LiquidGlassView: UIView {
                 blurView.blurRadius = blurRadius
             } else if #available(iOS 14.0, *), let blurView = self.blurView as? VisualEffectView {
                 blurView.blurRadius = blurRadius
-            } else if #available(iOS 8.0, *), let blurView = self.blurView as? CustomBlurEffectView {
+            } else if #available(iOS 8.0, *), let blurView = self.blurView as? VisualEffectView1 {
                 blurView.blurRadius = blurRadius
             }
         }
@@ -102,7 +102,7 @@ public class LiquidGlassView: UIView {
                 blur.blurRadius = blurRadius
                 blurView = blur
             } else if #available(iOS 8.0, *) {
-                let blur = CustomBlurEffectView()
+                let blur = VisualEffectView1()
                 blur.blurRadius = blurRadius
                 blurView = blur
             } else {
@@ -149,7 +149,7 @@ public class LiquidGlassView: UIView {
             blurView.layer.masksToBounds = true
             addSubview(blurView)
             sendSubviewToBack(blurView)
-        } else if #available(iOS 8.0, *), let blurView = blurView as? CustomBlurEffectView {
+        } else if #available(iOS 8.0, *), let blurView = blurView as? VisualEffectView1 {
             blurView.layer.cornerRadius = cornerRadius
             blurView.layer.masksToBounds = true
             addSubview(blurView)
