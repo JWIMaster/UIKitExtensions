@@ -78,7 +78,7 @@ open class CustomBlurEffectView: UIView {
     
     /// Visual effect view.
     private lazy var visualEffectView: UIKit.UIVisualEffectView = {
-        if #available(iOS 14.0, *) {
+        if #available(iOS 16.0, *) {
             return UIVisualEffectView(effect: customBlurEffect_ios14)
         } else {
             return UIVisualEffectView(effect: customBlurEffect)
@@ -87,7 +87,7 @@ open class CustomBlurEffectView: UIView {
     
     /// Blur effect for IOS >= 14
     private lazy var customBlurEffect_ios14: CustomBlurEffect? = {
-        if #available(iOS 14.0, *) {
+        if #available(iOS 16.0, *) {
             let effect = CustomBlurEffect.effect(with: .extraLight)
             effect.blurRadius = blurRadius
             return effect
@@ -104,7 +104,7 @@ open class CustomBlurEffectView: UIView {
     
     /// Sets the value for the key on the blurEffect.
     private func _setValue(_ value: Any?, forKey key: String) {
-        if #available(iOS 14.0, *) {
+        if #available(iOS 16.0, *) {
             if key == Constants.blurRadiusKey {
                 updateViews()
             }
@@ -132,7 +132,7 @@ open class CustomBlurEffectView: UIView {
     
     /// Update visualEffectView for ios14+, if we need to change blurRadius
     private func updateViews() {
-        if #available(iOS 14.0, *) {
+        if #available(iOS 16.0, *) {
             visualEffectView.removeFromSuperview()
             let newEffect = CustomBlurEffect.effect(with: .extraLight)
             newEffect.blurRadius = blurRadius
