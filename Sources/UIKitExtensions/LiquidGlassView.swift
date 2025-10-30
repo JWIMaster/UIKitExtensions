@@ -11,11 +11,47 @@ public class LiquidGlassView: UIView {
     public var shadowColor: CGColor = UIColor.black.cgColor { didSet { updateCornersAndShadow() } }
     public var shadowOffset: CGSize = .zero { didSet { updateCornersAndShadow() } }
     public var saturationBoost: CGFloat = 1.1 { didSet { applySaturationBoost() } }
-    public var blurRadius: CGFloat = 12 { didSet { blurView?.blurRadius = blurRadius } }
-    public var scaleFactor: CGFloat = 0.4 { didSet { blurView?.scaleFactor = scaleFactor } }
-    public var frameInterval: Int = 3 { didSet { blurView?.frameInterval = UInt(frameInterval) } }
-    public var isLiveBlurring: Bool = true { didSet { blurView?.isLiveBlurring = isLiveBlurring } }
-    public weak var snapshotTargetView: UIView? { didSet { blurView?.snapshotTargetView = snapshotTargetView } }
+    public var blurRadius: CGFloat = 12 {
+        didSet {
+            if let blurView = self.blurView as? LFGlassView {
+                blurView.blurRadius = blurRadius
+            } else if #available(iOS 8.0, *), let blurView = self.blurView as? CustomBlurEffectView {
+                blurView.blurRadius = blurRadius
+            }
+        }
+    }
+
+    public var scaleFactor: CGFloat = 0.4 {
+        didSet {
+            if let blurView = self.blurView as? LFGlassView {
+                blurView.scaleFactor = scaleFactor
+            }
+        }
+    }
+
+    public var frameInterval: Int = 3 {
+        didSet {
+            if let blurView = self.blurView as? LFGlassView {
+                blurView.frameInterval = UInt(frameInterval)
+            }
+        }
+    }
+
+    public var isLiveBlurring: Bool = true {
+        didSet {
+            if let blurView = self.blurView as? LFGlassView {
+                blurView.isLiveBlurring = isLiveBlurring
+            }
+        }
+    }
+
+    public weak var snapshotTargetView: UIView? {
+        didSet {
+            if let blurView = self.blurView as? LFGlassView {
+                blurView.snapshotTargetView = snapshotTargetView
+            }
+        }
+    }
     public var tintColorForGlass: UIColor = UIColor.blue.withAlphaComponent(0.05) {
         didSet {
             renderDecorLayer()
@@ -25,7 +61,7 @@ public class LiquidGlassView: UIView {
     public var disableBlur: Bool = false
 
     // Subviews
-    public var blurView: LFGlassView?
+    public var blurView: UIView?
     public var solidView: UIView?
     
     private var decorLayer = CALayer()
@@ -58,10 +94,16 @@ public class LiquidGlassView: UIView {
         self.disableBlur = disableBlur
 
         if !disableBlur {
-            let blur = LFGlassView()
-            blur.snapshotTargetView = snapshotTargetView
-            blur.blurRadius = blurRadius
-            blurView = blur
+            if #available(iOS 8.0, *) {
+                let blur = CustomBlurEffectView()
+                blur.blurRadius = blurRadius
+                blurView = blur
+            } else {
+                let blur = LFGlassView()
+                blur.snapshotTargetView = snapshotTargetView
+                blur.blurRadius = blurRadius
+                blurView = blur
+            }
         } else {
             solidView = UIView()
         }
@@ -90,7 +132,7 @@ public class LiquidGlassView: UIView {
                 solidView.layer.masksToBounds = true
                 addSubview(solidView)
             }
-        } else if let blurView = blurView {
+        } else if let blurView = blurView as? LFGlassView {
             blurView.isLiveBlurring = true
             blurView.layer.cornerRadius = cornerRadius
             blurView.layer.masksToBounds = true
