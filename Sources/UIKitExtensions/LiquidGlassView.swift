@@ -145,7 +145,7 @@ public class LiquidGlassView: UIView {
 
         decorLayer.cornerRadius = cornerRadius
         decorLayer.masksToBounds = true
-        layer.addSublayer(decorLayer)
+        //layer.addSublayer(decorLayer)
     }
 
     // MARK: - Render Decor Layer
