@@ -94,7 +94,11 @@ public class LiquidGlassView: UIView {
         self.disableBlur = disableBlur
 
         if !disableBlur {
-            if #available(iOS 8.0, *) {
+            if #available(iOS 14.0, *) {
+                let blur = VisualEffectView()
+                blur.blurRadius = blurRadius
+                blurView = blur
+            } else if #available(iOS 8.0, *) {
                 let blur = CustomBlurEffectView()
                 blur.blurRadius = blurRadius
                 blurView = blur
@@ -137,6 +141,11 @@ public class LiquidGlassView: UIView {
             blurView.layer.cornerRadius = cornerRadius
             blurView.layer.masksToBounds = true
             addSubview(blurView)
+        } else if #available(iOS 14.0, *), let blurView = blurView as? VisualEffectView {
+            blurView.layer.cornerRadius = cornerRadius
+            blurView.layer.masksToBounds = true
+            addSubview(blurView)
+            sendSubviewToBack(blurView)
         } else if #available(iOS 8.0, *), let blurView = blurView as? CustomBlurEffectView {
             blurView.layer.cornerRadius = cornerRadius
             blurView.layer.masksToBounds = true
