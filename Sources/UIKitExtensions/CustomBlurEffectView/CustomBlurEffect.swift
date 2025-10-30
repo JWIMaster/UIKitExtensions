@@ -22,6 +22,7 @@ class CustomBlurEffect: UIBlurEffect {
         let baseEffect: UIBlurEffect
         if let blurClass = NSClassFromString("_UICustomBlurEffect") as? UIBlurEffect.Type {
             baseEffect = blurClass.init()
+
         } else {
             // fallback: create a regular UIBlurEffect (avoids super.init crash)
             baseEffect = UIBlurEffect(style: style)
