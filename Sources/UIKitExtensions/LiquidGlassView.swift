@@ -137,15 +137,19 @@ public class LiquidGlassView: UIView {
             blurView.layer.cornerRadius = cornerRadius
             blurView.layer.masksToBounds = true
             addSubview(blurView)
-        } else if #available(iOS 8.0, *), let blurView = blurView as? CustomBlurEffectView {
+        } else if #available(iOS 8.0, *) {
             let blur = UIVisualEffectView(effect: UIBlurEffect(style: .light))
-            self.blurView = blur
-            addSubview(self.blurView as! UIVisualEffectView)
+            blur.frame = bounds
+            blur.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+            blur.layer.cornerRadius = cornerRadius
+            blur.layer.masksToBounds = true
+            blurView = blur
+            addSubview(blur)
         }
 
         decorLayer.cornerRadius = cornerRadius
         decorLayer.masksToBounds = true
-        //layer.addSublayer(decorLayer)
+        layer.addSublayer(decorLayer)
     }
 
     // MARK: - Render Decor Layer
