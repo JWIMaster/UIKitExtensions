@@ -41,7 +41,7 @@ open class VisualEffectView: UIVisualEffectView {
      The default value is 0.0.
      */
     open var colorTintAlpha: CGFloat {
-        get { return _value(forKey: .colorTintAlpha) ?? 0.0 }
+        get { return _value(forKey: .colorTintAlpha) ?? 0.8 }
         set { colorTint = colorTint?.withAlphaComponent(newValue) }
     }
     
