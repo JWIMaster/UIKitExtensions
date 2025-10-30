@@ -68,10 +68,7 @@ open class VisualEffectView: UIVisualEffectView {
      
      The default value is 1.0.
      */
-    open var saturation: CGFloat {
-        get { return _value(forKey: .saturationDeltaFactor) ?? 1.0 }
-        set { _setValue(newValue, forKey: .saturationDeltaFactor) }
-    }
+    
     
     /**
      Scale factor.
