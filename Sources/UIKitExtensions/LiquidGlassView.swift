@@ -137,6 +137,10 @@ public class LiquidGlassView: UIView {
             blurView.layer.cornerRadius = cornerRadius
             blurView.layer.masksToBounds = true
             addSubview(blurView)
+        } else if #available(iOS 8.0, *), let blurView = blurView as? CustomBlurEffectView {
+            blurView.layer.cornerRadius = cornerRadius
+            blurView.layer.masksToBounds = true
+            addSubview(blurView)
         }
 
         decorLayer.cornerRadius = cornerRadius
