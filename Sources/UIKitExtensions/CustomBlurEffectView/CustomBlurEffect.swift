@@ -1,21 +1,19 @@
-//
-//  CustomBlurEffect.swift
-//  CustomBlurEffectView
-//
-//  Created by Kononec Dmitrii on 07.09.2020.
-//
-
 import UIKit
 
 @available(iOS 8.0, *)
 class CustomBlurEffect: UIBlurEffect {
     
-    public var blurRadius: CGFloat = 10.0
+    /// Dynamic blur radius
+    public var blurRadius: CGFloat {
+        get { return _value(forKey: Constants.blurRadiusSettingKey) ?? 10.0 }
+        set { _setValue(newValue, forKey: Constants.blurRadiusSettingKey) }
+    }
     
     private enum Constants {
         static let blurRadiusSettingKey = "blurRadius"
     }
     
+    /// Creates a CustomBlurEffect instance dynamically
     @available(iOS 14.0, *)
     class func effect(with style: UIBlurEffect.Style) -> CustomBlurEffect {
         // Create private blur effect at runtime instead of calling super.init
@@ -36,22 +34,20 @@ class CustomBlurEffect: UIBlurEffect {
         return effect
     }
 
-    
+    /// Copy override (keeps class as CustomBlurEffect)
     override func copy(with zone: NSZone? = nil) -> Any {
         let result = super.copy(with: zone)
         object_setClass(result, Self.self)
         return result
     }
-    
-    override var effectSettings: AnyObject {
-        get {
-            let settings = super.effectSettings
-            settings.setValue(blurRadius, forKey: Constants.blurRadiusSettingKey)
-            return settings
-        }
-        set {
-            super.effectSettings = newValue
-        }
+
+    // MARK: - Helpers
+
+    private func _value<T>(forKey key: String) -> T? {
+        return (self as AnyObject).value(forKey: key) as? T
     }
-    
+
+    private func _setValue<T>(_ value: T?, forKey key: String) {
+        (self as AnyObject).setValue(value, forKey: key)
+    }
 }
