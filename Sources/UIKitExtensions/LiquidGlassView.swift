@@ -1,5 +1,4 @@
 import UIKit
-import GPUImage1Swift
 import LiveFrost
 import FoundationCompatKit
 
@@ -67,7 +66,6 @@ public class LiquidGlassView: UIView {
     public var solidView: UIView?
     
     private var decorLayer = CALayer()
-    private var saturationFilter: GPUImageSaturationFilter?
 
     private static let renderQueue = DispatchQueue(label: "com.yourapp.liquidglass.render", attributes: .concurrent, target: .global(qos: .userInitiated))
     
@@ -304,8 +302,7 @@ public class LiquidGlassView: UIView {
     }
 
     private func applySaturationBoost() {
-        saturationFilter = GPUImageSaturationFilter()
-        saturationFilter?.saturation = saturationBoost
+
     }
 }
 
