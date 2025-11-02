@@ -97,7 +97,7 @@ public class LiquidGlassView: UIView {
                 cornerRadius: CGFloat = 50,
                 snapshotTargetView: UIView?,
                 disableBlur: Bool = false,
-                filterOptions: [AdvancedFilterOptions] = [.tint, .depth, .darken, .highlight, .rim])
+                filterOptions: [AdvancedFilterOptions])
     {
         self.filterOptions = filterOptions
         super.init(frame: .zero)
@@ -127,6 +127,14 @@ public class LiquidGlassView: UIView {
         }
         setupView()
         renderDecorLayer()
+    }
+    
+    public convenience init(blurRadius: CGFloat = 12,
+                cornerRadius: CGFloat = 50,
+                snapshotTargetView: UIView?,
+                disableBlur: Bool = false)
+    {
+        self.init(blurRadius: blurRadius, cornerRadius: cornerRadius, snapshotTargetView: snapshotTargetView, disableBlur: disableBlur, filterOptions: [.tint, .depth, .darken, .highlight, .rim])
     }
 
     required init?(coder: NSCoder) {
