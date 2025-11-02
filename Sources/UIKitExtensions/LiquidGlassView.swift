@@ -58,6 +58,13 @@ public class LiquidGlassView: UIView {
             renderDecorLayer()
         }
     }
+    
+    public enum AdvancedFilterOptions {
+        case tint, darken, highlight, depth, rim
+    }
+    
+    public var filterOptions: [AdvancedFilterOptions]
+    
     public var solidViewColour: UIColor = .clear { didSet { solidView?.backgroundColor = solidViewColour } }
     public var disableBlur: Bool = false
 
@@ -86,7 +93,13 @@ public class LiquidGlassView: UIView {
 
     
     // MARK: - Init
-    public init(blurRadius: CGFloat = 12, cornerRadius: CGFloat = 50, snapshotTargetView: UIView?, disableBlur: Bool = false) {
+    public init(blurRadius: CGFloat = 12,
+                cornerRadius: CGFloat = 50,
+                snapshotTargetView: UIView?,
+                disableBlur: Bool = false,
+                filterOptions: [AdvancedFilterOptions] = [.tint, .depth, .darken, .highlight, .rim])
+    {
+        self.filterOptions = filterOptions
         super.init(frame: .zero)
         self.cornerRadius = cornerRadius
         self.blurRadius = blurRadius
@@ -114,12 +127,10 @@ public class LiquidGlassView: UIView {
         }
         setupView()
         renderDecorLayer()
-        //applySaturationBoost()
-        
-        
     }
 
     required init?(coder: NSCoder) {
+        self.filterOptions = [.tint, .depth, .darken, .highlight, .rim]
         super.init(coder: coder)
         setupView()
         renderDecorLayer()
@@ -185,63 +196,73 @@ public class LiquidGlassView: UIView {
         //print("\(Date()) render \(key)")
         let tempLayer = CALayer()
         
-        let tintLayer = CALayer()
-        tintLayer.name = "tintLayer"
-        tintLayer.backgroundColor = tintColorForGlass.withIncreasedSaturation(factor: 1.1).cgColor
-        tintLayer.frame = bounds
-        tintLayer.cornerRadius = cornerRadius
-        tintLayer.masksToBounds = true
-        tintLayer.compositingFilter = "softLightBlendMode"
-        tempLayer.addSublayer(tintLayer)
+        if filterOptions.contains(.tint) {
+            let tintLayer = CALayer()
+            tintLayer.name = "tintLayer"
+            tintLayer.backgroundColor = tintColorForGlass.withIncreasedSaturation(factor: 1.1).cgColor
+            tintLayer.frame = bounds
+            tintLayer.cornerRadius = cornerRadius
+            tintLayer.masksToBounds = true
+            tintLayer.compositingFilter = "softLightBlendMode"
+            tempLayer.addSublayer(tintLayer)
+        }
         
-        // Darken falloff
-        let darken = CAGradientLayer()
-        darken.colors = [UIColor.black.withAlphaComponent(0.22).cgColor, UIColor.clear.cgColor]
-        darken.startPoint = CGPoint(x: 0.5, y: 1)
-        darken.endPoint = CGPoint(x: 0.5, y: 0)
-        darken.cornerRadius = cornerRadius
-        darken.compositingFilter = "multiplyBlendMode"
-        darken.frame = bounds
-        tempLayer.addSublayer(darken)
-
-        // Corner highlight
-        let highlight = CAGradientLayer()
-        highlight.colors = [
-            UIColor.white.withAlphaComponent(0.25).cgColor,
-            UIColor.clear.cgColor,
-            UIColor.white.withAlphaComponent(0.2).cgColor,
-            UIColor.white.withAlphaComponent(0.1).cgColor
-        ]
-        highlight.locations = [0.0, 0.25, 0.9, 1.0]
-        highlight.startPoint = CGPoint(x: 0, y: 0)
-        highlight.endPoint = CGPoint(x: 1, y: 1)
-        highlight.cornerRadius = cornerRadius
-        highlight.compositingFilter = "screenBlendMode"
-        highlight.frame = bounds
-        tempLayer.addSublayer(highlight)
-
-        // Inner depth
-        let innerDepth = CAGradientLayer()
-        innerDepth.colors = [
-            UIColor.black.withAlphaComponent(0.15).cgColor,
-            UIColor.clear.cgColor,
-            UIColor.white.withAlphaComponent(0.05).cgColor
-        ]
-        innerDepth.locations = [0.0, 0.6, 1.0]
-        innerDepth.startPoint = CGPoint(x: 0.5, y: 1)
-        innerDepth.endPoint = CGPoint(x: 0.5, y: 0)
-        innerDepth.cornerRadius = cornerRadius
-        innerDepth.compositingFilter = "softLightBlendMode"
-        innerDepth.frame = bounds
-        tempLayer.addSublayer(innerDepth)
-
-        // Rim
-        let rim = CALayer()
-        rim.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
-        rim.borderWidth = 0.8
-        rim.cornerRadius = cornerRadius
-        rim.frame = bounds
-        tempLayer.addSublayer(rim)
+        if filterOptions.contains(.darken) {
+            // Darken falloff
+            let darken = CAGradientLayer()
+            darken.colors = [UIColor.black.withAlphaComponent(0.22).cgColor, UIColor.clear.cgColor]
+            darken.startPoint = CGPoint(x: 0.5, y: 1)
+            darken.endPoint = CGPoint(x: 0.5, y: 0)
+            darken.cornerRadius = cornerRadius
+            darken.compositingFilter = "multiplyBlendMode"
+            darken.frame = bounds
+            tempLayer.addSublayer(darken)
+        }
+        
+        if filterOptions.contains(.highlight) {
+            // Corner highlight
+            let highlight = CAGradientLayer()
+            highlight.colors = [
+                UIColor.white.withAlphaComponent(0.25).cgColor,
+                UIColor.clear.cgColor,
+                UIColor.white.withAlphaComponent(0.2).cgColor,
+                UIColor.white.withAlphaComponent(0.1).cgColor
+            ]
+            highlight.locations = [0.0, 0.25, 0.9, 1.0]
+            highlight.startPoint = CGPoint(x: 0, y: 0)
+            highlight.endPoint = CGPoint(x: 1, y: 1)
+            highlight.cornerRadius = cornerRadius
+            highlight.compositingFilter = "screenBlendMode"
+            highlight.frame = bounds
+            tempLayer.addSublayer(highlight)
+        }
+        
+        if filterOptions.contains(.depth) {
+            // Inner depth
+            let innerDepth = CAGradientLayer()
+            innerDepth.colors = [
+                UIColor.black.withAlphaComponent(0.15).cgColor,
+                UIColor.clear.cgColor,
+                UIColor.white.withAlphaComponent(0.05).cgColor
+            ]
+            innerDepth.locations = [0.0, 0.6, 1.0]
+            innerDepth.startPoint = CGPoint(x: 0.5, y: 1)
+            innerDepth.endPoint = CGPoint(x: 0.5, y: 0)
+            innerDepth.cornerRadius = cornerRadius
+            innerDepth.compositingFilter = "softLightBlendMode"
+            innerDepth.frame = bounds
+            tempLayer.addSublayer(innerDepth)
+        }
+        
+        if filterOptions.contains(.rim) {
+            // Rim
+            let rim = CALayer()
+            rim.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
+            rim.borderWidth = 0.8
+            rim.cornerRadius = cornerRadius
+            rim.frame = bounds
+            tempLayer.addSublayer(rim)
+        }
 
         // Render background asynchronously
         LiquidGlassView.renderQueue.async { [weak self] in
