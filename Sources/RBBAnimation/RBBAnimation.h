@@ -7,6 +7,7 @@
 //
 
 #import <QuartzCore/QuartzCore.h>
+#import "RBBSpringAnimation.h"
 
 typedef id (^RBBAnimationBlock)(CGFloat t, CGFloat duration);
 
