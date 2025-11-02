@@ -23,13 +23,8 @@ let package = Package(
         // Targets can depend on other targets in this package, and on products in packages this package depends on.
         .target(
             name: "UIKitExtensions",
-            dependencies: ["UIKitCompatKit", "FoundationCompatKit", "iOS6BarFix", "Keychain", "RBBAnimation"],
+            dependencies: ["UIKitCompatKit", "FoundationCompatKit", "iOS6BarFix", "Keychain"],
             path: "Sources/UIKitExtensions"),
-        .target(
-            name: "RBBAnimation",
-            dependencies: [],
-            path: "Sources/RBBAnimation",
-            publicHeadersPath: "."),
         .target(
             name: "iOS6BarFix",
             dependencies: [],
