@@ -59,6 +59,13 @@ public class LiquidGlassView: UIView {
         }
     }
     
+    public var tintGradientColors: [UIColor]? {
+        didSet {
+            renderDecorLayer()
+        }
+    }
+
+    
     public enum AdvancedFilterOptions {
         case tint, darken, highlight, depth, rim
     }
@@ -205,15 +212,24 @@ public class LiquidGlassView: UIView {
         let tempLayer = CALayer()
         
         if filterOptions.contains(.tint) {
-            let tintLayer = CALayer()
+            let tintLayer = CAGradientLayer()
             tintLayer.name = "tintLayer"
-            tintLayer.backgroundColor = tintColorForGlass.withIncreasedSaturation(factor: saturationBoost).cgColor
             tintLayer.frame = bounds
             tintLayer.cornerRadius = cornerRadius
             tintLayer.masksToBounds = true
             tintLayer.compositingFilter = "softLightBlendMode"
+            
+            if let colors = tintGradientColors, !colors.isEmpty {
+                tintLayer.colors = colors.map { $0.withIncreasedSaturation(factor: saturationBoost).cgColor }
+                tintLayer.startPoint = CGPoint(x: 0.5, y: 0)
+                tintLayer.endPoint = CGPoint(x: 0.5, y: 1)
+            } else {
+                tintLayer.backgroundColor = tintColorForGlass.withIncreasedSaturation(factor: saturationBoost).cgColor
+            }
+            
             tempLayer.addSublayer(tintLayer)
         }
+
         
         if filterOptions.contains(.darken) {
             // Darken falloff
