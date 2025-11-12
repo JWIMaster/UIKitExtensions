@@ -9,3 +9,5 @@ void SetWantsFullScreenLayout(UIViewController *controller, BOOL enabled) {
         [controller setWantsFullScreenLayout:enabled];
     }
 }
+
+
