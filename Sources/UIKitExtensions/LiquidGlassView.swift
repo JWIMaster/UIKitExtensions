@@ -188,7 +188,12 @@ public class LiquidGlassView: UIView {
     // MARK: - Render Decor Layer
     private func renderDecorLayer() {
         let size = bounds.size
-        let key = cacheKey(for: size, color: self.tintColorForGlass)
+        var key: NSString
+        if let colors = tintGradientColors, !colors.isEmpty {
+            key = cacheKey(for: size, color: colors.first!)
+        } else {
+            key = cacheKey(for: size, color: self.tintColorForGlass)
+        }
 
         // Reuse cached base image (no tint)
         if let cachedImage = self.renderCache.object(forKey: key) {
