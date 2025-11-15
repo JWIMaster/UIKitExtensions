@@ -9,15 +9,27 @@ import Foundation
 import UIKit
 
 public extension UIImage {
-    static func solid(color: UIColor, size: CGSize = CGSize(width: 30, height: 30)) -> UIImage {
+    static func solid(
+        color: UIColor,
+        size: CGSize = CGSize(width: 30, height: 30),
+        cornerRadius: CGFloat = 0
+    ) -> UIImage {
         let rect = CGRect(origin: .zero, size: size)
+
         UIGraphicsBeginImageContextWithOptions(size, false, 0)
-        color.setFill()
-        UIRectFill(rect)
+        let context = UIGraphicsGetCurrentContext()!
+
+        let path = UIBezierPath(roundedRect: rect, cornerRadius: cornerRadius)
+        context.addPath(path.cgPath)
+        context.setFillColor(color.cgColor)
+        context.fillPath()
+
         let image = UIGraphicsGetImageFromCurrentImageContext()!
         UIGraphicsEndImageContext()
+
         return image
     }
+
     
     func resizeImage(_ image: UIImage, targetSize: CGSize) -> UIImage {
         UIGraphicsBeginImageContextWithOptions(targetSize, false, 0.0)
