@@ -122,7 +122,21 @@ public extension UIView {
     }
 }
 
+public extension UIView {
+    func springAnimation(scaleDuration: CGFloat = 0.3, bounceDuration: CGFloat = 0.2, scaleOptions: UIView.AnimationOptions = [.curveEaseOut, .allowUserInteraction], bounceOptions: UIView.AnimationOptions = [.curveEaseInOut, .allowUserInteraction], bounceAmount: CGFloat = -6, delay: CGFloat = 0) {
+        self.alpha = 0
+        self.transform = CGAffineTransform(translationX: 0, y: 50).scaledBy(x: 0.8, y: 0.8)
 
+        UIView.animate(withDuration: scaleDuration, delay: delay, options: scaleOptions, animations: {
+            self.alpha = 1
+            self.transform = CGAffineTransform(translationX: 0, y: bounceAmount)
+        }, completion: { _ in
+            UIView.animate(withDuration: bounceDuration, delay: 0, options: bounceOptions, animations: {
+                self.transform = .identity
+            }, completion: nil)
+        })
+    }
+}
 
 
 
