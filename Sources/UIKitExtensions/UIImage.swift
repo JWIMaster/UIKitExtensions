@@ -9,11 +9,7 @@ import Foundation
 import UIKit
 
 public extension UIImage {
-    static func solid(
-        color: UIColor,
-        size: CGSize = CGSize(width: 30, height: 30),
-        cornerRadius: CGFloat = 0
-    ) -> UIImage {
+    static func solid(color: UIColor, size: CGSize = CGSize(width: 30, height: 30), cornerRadius: CGFloat = 0) -> UIImage {
         let rect = CGRect(origin: .zero, size: size)
 
         UIGraphicsBeginImageContextWithOptions(size, false, 0)
@@ -45,7 +41,7 @@ public extension UIImage {
     
     
     func getThumbnail(ofQuality quality: ThumbnailQuality) -> UIImage? {
-        guard let imageData = self.pngData() else { return nil } // this could be raw data already
+        guard let imageData = self.pngData() else { return nil }
         
         let maxPixelSize: CGFloat = {
             switch quality {

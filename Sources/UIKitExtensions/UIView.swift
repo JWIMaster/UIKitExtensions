@@ -2,6 +2,7 @@ import UIKit
 import UIKitCompatKit
 
 extension UIView {
+    ///Pins the view to the edges of another view using constraints
     public func pinToEdges(of view: UIView, insetBy insets: UIEdgeInsets = .zero) {
         guard let parent = superview else {
             return
@@ -17,6 +18,7 @@ extension UIView {
         NSLayoutConstraint.activate(constraints)
     }
     
+    ///Pins the view to the center of another view using constraints
     public func pinToCenter(of view: UIView, offsetBy offset: (x: CGFloat, y: CGFloat) = (x: 0, y: 0)) {
         let constraints = [
             centerXAnchor.constraint(equalTo: view.centerXAnchor, constant: offset.x),
@@ -29,6 +31,7 @@ extension UIView {
 
 
 public extension UIView {
+    ///Defines the highest UIViewController that the view belongs to
     var parentViewController: UIViewController? {
         var responder: UIResponder? = self
         while let r = responder {
@@ -123,6 +126,7 @@ public extension UIView {
 }
 
 public extension UIView {
+    
     func springAnimation(scaleDuration: CGFloat = 0.3, bounceDuration: CGFloat = 0.2, scaleOptions: UIView.AnimationOptions = [.curveEaseOut, .allowUserInteraction], bounceOptions: UIView.AnimationOptions = [.curveEaseInOut, .allowUserInteraction], bounceAmount: CGFloat = -6, delay: CGFloat = 0) {
         self.alpha = 0
         self.transform = CGAffineTransform(translationX: 0, y: 50).scaledBy(x: 0.8, y: 0.8)

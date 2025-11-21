@@ -2,8 +2,9 @@ import UIKit
 import LiveFrost
 import FoundationCompatKit
 
+///Liquid Glass/Aqua fuse class, inherits from UIView. Contains a UIBlurEffect on iOS 9+
+///Components are fully configurable, as well as most aspects of the view
 public class LiquidGlassView: UIView {
-
     public var cornerRadius: CGFloat = 50 { didSet { updateCornersAndShadow() } }
     public var shadowOpacity: Float = 0.6 { didSet { updateCornersAndShadow() } }
     public var shadowRadius: CGFloat = 12 { didSet { updateCornersAndShadow() } }
