@@ -27,13 +27,21 @@ public extension UIImage {
     }
 
     
-    func resizeImage(_ image: UIImage, targetSize: CGSize) -> UIImage {
+    func resizeImage(_ image: UIImage, targetSize: CGSize, cornerRadius: CGFloat = 0) -> UIImage {
         UIGraphicsBeginImageContextWithOptions(targetSize, false, 0.0)
-        image.draw(in: CGRect(origin: .zero, size: targetSize))
+        let rect = CGRect(origin: .zero, size: targetSize)
+        
+        // Clip to rounded rect
+        UIBezierPath(roundedRect: rect, cornerRadius: cornerRadius).addClip()
+        
+        image.draw(in: rect)
+        
         let newImage = UIGraphicsGetImageFromCurrentImageContext()
         UIGraphicsEndImageContext()
+        
         return newImage ?? image
     }
+
     
     enum ThumbnailQuality {
         case low, medium, high, full
