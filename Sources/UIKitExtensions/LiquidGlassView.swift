@@ -284,33 +284,37 @@ public class LiquidGlassView: UIView {
             tempLayer.addSublayer(rim)
         }
 
-        // INNER SHADOW (CALayer-based, closely matches old UIGraphics look)
+        // INNER SHADOW (Gradient-based, visible)
         if filterOptions.contains(.innerShadow) {
             let innerShadowLayer = CALayer()
             innerShadowLayer.frame = bounds
             innerShadowLayer.cornerRadius = cornerRadius
             innerShadowLayer.masksToBounds = true
 
-            // Shadow layer
-            let shadowLayer = CALayer()
-            shadowLayer.frame = innerShadowLayer.bounds
-            shadowLayer.backgroundColor = UIColor.clear.cgColor
-            shadowLayer.cornerRadius = cornerRadius
-            shadowLayer.shadowColor = UIColor.black.cgColor
-            shadowLayer.shadowOpacity = 0.5   // matches previous alpha
-            shadowLayer.shadowOffset = CGSize(width: 0, height: 2) // same as before
-            shadowLayer.shadowRadius = 6      // soft blur like UIGraphics
+            // Top shadow (like your previous offset)
+            let topShadow = CAGradientLayer()
+            topShadow.frame = bounds
+            topShadow.colors = [
+                UIColor.black.withAlphaComponent(0.5).cgColor, // shadow color
+                UIColor.clear.cgColor
+            ]
+            topShadow.startPoint = CGPoint(x: 0.5, y: 0)
+            topShadow.endPoint = CGPoint(x: 0.5, y: 0.5)
+            topShadow.cornerRadius = cornerRadius
+            innerShadowLayer.addSublayer(topShadow)
 
-            // Create a mask to invert the shadow so it only appears inside
-            let maskLayer = CAShapeLayer()
-            let extended = bounds.insetBy(dx: -shadowLayer.shadowRadius*2, dy: -shadowLayer.shadowRadius*2)
-            let path = UIBezierPath(roundedRect: extended, cornerRadius: cornerRadius + shadowLayer.shadowRadius*2)
-            let innerPath = UIBezierPath(roundedRect: bounds, cornerRadius: cornerRadius).reversing()
-            path.append(innerPath)
-            maskLayer.path = path.cgPath
-            shadowLayer.mask = maskLayer
+            // Bottom shadow (optional subtle glow)
+            let bottomShadow = CAGradientLayer()
+            bottomShadow.frame = bounds
+            bottomShadow.colors = [
+                UIColor.clear.cgColor,
+                UIColor.black.withAlphaComponent(0.15).cgColor
+            ]
+            bottomShadow.startPoint = CGPoint(x: 0.5, y: 0.5)
+            bottomShadow.endPoint = CGPoint(x: 0.5, y: 1)
+            bottomShadow.cornerRadius = cornerRadius
+            innerShadowLayer.addSublayer(bottomShadow)
 
-            innerShadowLayer.addSublayer(shadowLayer)
             tempLayer.addSublayer(innerShadowLayer)
         }
 
