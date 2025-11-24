@@ -74,7 +74,7 @@ public class LiquidGlassView: UIView {
         case tint, darken, highlight, depth, rim, innerShadow
     }
 
-    public var filterOptions: [AdvancedFilterOptions]
+    public var filterExclusions: [AdvancedFilterOptions]
     public var solidViewColour: UIColor = .clear { didSet { solidView?.backgroundColor = solidViewColour } }
     public var disableBlur: Bool = false
 
@@ -101,9 +101,9 @@ public class LiquidGlassView: UIView {
         cornerRadius: CGFloat = 50,
         snapshotTargetView: UIView?,
         disableBlur: Bool = false,
-        filterOptions: [AdvancedFilterOptions]
+        filterExclusions: [AdvancedFilterOptions]
     ) {
-        self.filterOptions = filterOptions
+        self.filterExclusions = filterExclusions
         super.init(frame: .zero)
         self.cornerRadius = cornerRadius
         self.blurRadius = blurRadius
@@ -145,12 +145,12 @@ public class LiquidGlassView: UIView {
             cornerRadius: cornerRadius,
             snapshotTargetView: snapshotTargetView,
             disableBlur: disableBlur,
-            filterOptions: [.tint, .depth, .darken, .highlight, .rim, .innerShadow]
+            filterExclusions: []
         )
     }
 
     required init?(coder: NSCoder) {
-        self.filterOptions = [.tint, .depth, .darken, .highlight, .rim, .innerShadow]
+        self.filterExclusions = []
         super.init(coder: coder)
         setupView()
         renderDecorLayer()
@@ -211,7 +211,7 @@ public class LiquidGlassView: UIView {
         let tempLayer = CALayer()
 
         // TINT
-        if filterOptions.contains(.tint) {
+        if !filterExclusions.contains(.tint) {
             let tintLayer = CAGradientLayer()
             tintLayer.frame = bounds
             tintLayer.cornerRadius = cornerRadius
@@ -228,7 +228,7 @@ public class LiquidGlassView: UIView {
         }
 
         // DARKEN
-        if filterOptions.contains(.darken) {
+        if !filterExclusions.contains(.darken) {
             let darken = CAGradientLayer()
             darken.colors = [UIColor.black.withAlphaComponent(0.22).cgColor, UIColor.clear.cgColor]
             darken.startPoint = CGPoint(x: 0.5, y: 1)
@@ -240,7 +240,7 @@ public class LiquidGlassView: UIView {
         }
 
         // HIGHLIGHT
-        if filterOptions.contains(.highlight) {
+        if !filterExclusions.contains(.highlight) {
             let highlight = CAGradientLayer()
             highlight.colors = [
                 UIColor.white.withAlphaComponent(0.25).cgColor,
@@ -258,7 +258,7 @@ public class LiquidGlassView: UIView {
         }
 
         // DEPTH
-        if filterOptions.contains(.depth) {
+        if !filterExclusions.contains(.depth) {
             let innerDepth = CAGradientLayer()
             innerDepth.colors = [
                 UIColor.black.withAlphaComponent(0.15).cgColor,
@@ -275,7 +275,7 @@ public class LiquidGlassView: UIView {
         }
 
         // RIM
-        if filterOptions.contains(.rim) {
+        if !filterExclusions.contains(.rim) {
             let rim = CALayer()
             rim.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
             rim.borderWidth = 0.8
@@ -285,7 +285,7 @@ public class LiquidGlassView: UIView {
         }
 
         // INNER SHADOW
-        if filterOptions.contains(.innerShadow) {
+        if !filterExclusions.contains(.innerShadow) {
             let key = "innerShadow_\(Int(bounds.width))x\(Int(bounds.height))_\(cornerRadius)"
             if let cached = renderCache.object(forKey: key as NSString) {
                 let shadowLayer = CALayer()
