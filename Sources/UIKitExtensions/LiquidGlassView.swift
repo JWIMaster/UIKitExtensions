@@ -2,15 +2,18 @@ import UIKit
 import LiveFrost
 import FoundationCompatKit
 
-///Liquid Glass/Aqua fuse class, inherits from UIView. Contains a UIBlurEffect on iOS 9+
-///Components are fully configurable, as well as most aspects of the view
+/// Liquid Glass/Aqua fuse class, inherits from UIView. Contains a UIBlurEffect on iOS 9+
+/// Components are fully configurable, as well as most aspects of the view
 public class LiquidGlassView: UIView {
+
+    // MARK: - Configurable properties
     public var cornerRadius: CGFloat = 50 { didSet { updateCornersAndShadow() } }
     public var shadowOpacity: Float = 0.6 { didSet { updateCornersAndShadow() } }
     public var shadowRadius: CGFloat = 12 { didSet { updateCornersAndShadow() } }
     public var shadowColor: CGColor = UIColor.black.cgColor { didSet { updateCornersAndShadow() } }
     public var shadowOffset: CGSize = .zero { didSet { updateCornersAndShadow() } }
     public var saturationBoost: CGFloat = 1.1 { didSet { applySaturationBoost() } }
+
     public var blurRadius: CGFloat = 12 {
         didSet {
             if let blurView = self.blurView as? LFGlassView {
@@ -54,59 +57,52 @@ public class LiquidGlassView: UIView {
             }
         }
     }
+
     public var tintColorForGlass: UIColor = UIColor.blue.withAlphaComponent(0.05) {
         didSet {
             renderDecorLayer()
         }
     }
-    
+
     public var tintGradientColors: [UIColor]? {
         didSet {
             renderDecorLayer()
         }
     }
 
-    
     public enum AdvancedFilterOptions {
-        case tint, darken, highlight, depth, rim
+        case tint, darken, highlight, depth, rim, innerShadow
     }
-    
+
     public var filterOptions: [AdvancedFilterOptions]
-    
     public var solidViewColour: UIColor = .clear { didSet { solidView?.backgroundColor = solidViewColour } }
     public var disableBlur: Bool = false
 
-    // Subviews
+    // MARK: - Subviews
     public var blurView: UIView?
     public var solidView: UIView?
-    
-    private var decorLayer = CALayer()
 
+    private var decorLayer = CALayer()
     private static let renderQueue = DispatchQueue(label: "com.yourapp.liquidglass.render", attributes: .concurrent, target: .global(qos: .userInitiated))
-    
-    private var renderCache: NSCache<NSString, CGImage> {
-        LiquidGlassCache.shared.cache
-    }
-    
+    private var renderCache: NSCache<NSString, CGImage> { LiquidGlassCache.shared.cache }
     private var lastRenderedSize: CGSize = .zero
 
     private func cacheKey(for size: CGSize, color: UIColor) -> NSString {
         let scale = UIScreen.main.scale
-        // Round size to avoid floating-point inaccuracies
         let w = Int(size.width * scale)
         let h = Int(size.height * scale)
         let colorHex = color.hexValue
         return "\(w)x\(h)_\(colorHex)" as NSString
     }
 
-    
     // MARK: - Init
-    public init(blurRadius: CGFloat = 12,
-                cornerRadius: CGFloat = 50,
-                snapshotTargetView: UIView?,
-                disableBlur: Bool = false,
-                filterOptions: [AdvancedFilterOptions])
-    {
+    public init(
+        blurRadius: CGFloat = 12,
+        cornerRadius: CGFloat = 50,
+        snapshotTargetView: UIView?,
+        disableBlur: Bool = false,
+        filterOptions: [AdvancedFilterOptions]
+    ) {
         self.filterOptions = filterOptions
         super.init(frame: .zero)
         self.cornerRadius = cornerRadius
@@ -133,23 +129,28 @@ public class LiquidGlassView: UIView {
         } else {
             solidView = UIView()
         }
+
         setupView()
         renderDecorLayer()
     }
-    
-    public convenience init(blurRadius: CGFloat = 12,
-                cornerRadius: CGFloat = 50,
-                snapshotTargetView: UIView?,
-                disableBlur: Bool = false)
-    {
-        self.init(blurRadius: blurRadius, cornerRadius: cornerRadius, snapshotTargetView: snapshotTargetView, disableBlur: disableBlur, filterOptions: [.tint, .depth, .darken, .highlight, .rim])
-    }
-    
-    private let innerShadowLayer = CALayer()
 
-    
+    public convenience init(
+        blurRadius: CGFloat = 12,
+        cornerRadius: CGFloat = 50,
+        snapshotTargetView: UIView?,
+        disableBlur: Bool = false
+    ) {
+        self.init(
+            blurRadius: blurRadius,
+            cornerRadius: cornerRadius,
+            snapshotTargetView: snapshotTargetView,
+            disableBlur: disableBlur,
+            filterOptions: [.tint, .depth, .darken, .highlight, .rim, .innerShadow]
+        )
+    }
+
     required init?(coder: NSCoder) {
-        self.filterOptions = [.tint, .depth, .darken, .highlight, .rim]
+        self.filterOptions = [.tint, .depth, .darken, .highlight, .rim, .innerShadow]
         super.init(coder: coder)
         setupView()
         renderDecorLayer()
@@ -187,11 +188,6 @@ public class LiquidGlassView: UIView {
         decorLayer.cornerRadius = cornerRadius
         decorLayer.masksToBounds = true
         layer.addSublayer(decorLayer)
-        innerShadowLayer.masksToBounds = true
-        innerShadowLayer.cornerRadius = cornerRadius
-        layer.addSublayer(innerShadowLayer)
-
-
     }
 
     // MARK: - Render Decor Layer
@@ -204,35 +200,23 @@ public class LiquidGlassView: UIView {
             key = cacheKey(for: size, color: self.tintColorForGlass)
         }
 
-        // Reuse cached base image (no tint)
         if let cachedImage = self.renderCache.object(forKey: key) {
-            //print("usedcache")
             decorLayer.contents = cachedImage
             return
         }
-        
-        guard bounds.width > 0, bounds.height > 0 else {
-            //print("Skipping render — zero bounds: \(bounds)")
-            return
-        }
-        
-        guard self.window != nil else {
-            //print("Skipping render - no parent window")
-            return
-        }
 
-        
-        //print("\(Date()) render \(key)")
+        guard bounds.width > 0, bounds.height > 0 else { return }
+        guard self.window != nil else { return }
+
         let tempLayer = CALayer()
-        
+
+        // TINT
         if filterOptions.contains(.tint) {
             let tintLayer = CAGradientLayer()
-            tintLayer.name = "tintLayer"
             tintLayer.frame = bounds
             tintLayer.cornerRadius = cornerRadius
             tintLayer.masksToBounds = true
             tintLayer.compositingFilter = "softLightBlendMode"
-            
             if let colors = tintGradientColors, !colors.isEmpty {
                 tintLayer.colors = colors.map { $0.withIncreasedSaturation(factor: saturationBoost).cgColor }
                 tintLayer.startPoint = CGPoint(x: 0.5, y: 0)
@@ -240,13 +224,11 @@ public class LiquidGlassView: UIView {
             } else {
                 tintLayer.backgroundColor = tintColorForGlass.withIncreasedSaturation(factor: saturationBoost).cgColor
             }
-            
             tempLayer.addSublayer(tintLayer)
         }
 
-        
+        // DARKEN
         if filterOptions.contains(.darken) {
-            // Darken falloff
             let darken = CAGradientLayer()
             darken.colors = [UIColor.black.withAlphaComponent(0.22).cgColor, UIColor.clear.cgColor]
             darken.startPoint = CGPoint(x: 0.5, y: 1)
@@ -256,9 +238,9 @@ public class LiquidGlassView: UIView {
             darken.frame = bounds
             tempLayer.addSublayer(darken)
         }
-        
+
+        // HIGHLIGHT
         if filterOptions.contains(.highlight) {
-            // Corner highlight
             let highlight = CAGradientLayer()
             highlight.colors = [
                 UIColor.white.withAlphaComponent(0.25).cgColor,
@@ -274,9 +256,9 @@ public class LiquidGlassView: UIView {
             highlight.frame = bounds
             tempLayer.addSublayer(highlight)
         }
-        
+
+        // DEPTH
         if filterOptions.contains(.depth) {
-            // Inner depth
             let innerDepth = CAGradientLayer()
             innerDepth.colors = [
                 UIColor.black.withAlphaComponent(0.15).cgColor,
@@ -291,9 +273,9 @@ public class LiquidGlassView: UIView {
             innerDepth.frame = bounds
             tempLayer.addSublayer(innerDepth)
         }
-        
+
+        // RIM
         if filterOptions.contains(.rim) {
-            // Rim
             let rim = CALayer()
             rim.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
             rim.borderWidth = 0.8
@@ -302,10 +284,30 @@ public class LiquidGlassView: UIView {
             tempLayer.addSublayer(rim)
         }
 
-        // Render background asynchronously
+        // INNER SHADOW
+        if filterOptions.contains(.innerShadow) {
+            UIGraphicsBeginImageContextWithOptions(bounds.size, false, UIScreen.main.scale)
+            if let ctx = UIGraphicsGetCurrentContext() {
+                let path = UIBezierPath(roundedRect: bounds, cornerRadius: cornerRadius * 0.85)
+                UIView().drawInnerShadow(
+                    path: path,
+                    shadowColor: UIColor.black.withAlphaComponent(0.5),
+                    offset: CGSize(width: 0, height: 2),
+                    blurRadius: 6
+                )
+                if let shadowImage = UIGraphicsGetImageFromCurrentImageContext()?.cgImage {
+                    let shadowLayer = CALayer()
+                    shadowLayer.frame = bounds
+                    shadowLayer.contents = shadowImage
+                    tempLayer.addSublayer(shadowLayer)
+                }
+            }
+            UIGraphicsEndImageContext()
+        }
+
+        // Render async
         LiquidGlassView.renderQueue.async { [weak self] in
             guard let self = self else { return }
-
             UIGraphicsBeginImageContextWithOptions(size, false, UIScreen.main.scale)
             if let ctx = UIGraphicsGetCurrentContext() {
                 tempLayer.render(in: ctx)
@@ -318,38 +320,11 @@ public class LiquidGlassView: UIView {
             tempLayer.sublayers?.removeAll()
 
             self.renderCache.setObject(renderedImage, forKey: key)
-
             DispatchQueue.main.async {
                 self.decorLayer.contents = renderedImage
             }
         }
     }
-    
-    private func renderInnerShadow() {
-        let size = bounds.size
-        guard size.width > 0, size.height > 0 else { return }
-
-        let path = UIBezierPath(
-            roundedRect: bounds,
-            cornerRadius: cornerRadius * 0.85
-        )
-
-        UIGraphicsBeginImageContextWithOptions(size, false, UIScreen.main.scale)
-        if let ctx = UIGraphicsGetCurrentContext() {
-            // draw using your extension
-            drawInnerShadow(
-                path: path,
-                shadowColor: UIColor.black.withAlphaComponent(0.5),
-                offset: CGSize(width: 0, height: 2),
-                blurRadius: 6
-            )
-            innerShadowLayer.contents = UIGraphicsGetImageFromCurrentImageContext()?.cgImage
-        }
-        UIGraphicsEndImageContext()
-    }
-
-
-
 
     // MARK: - Layout
     public override func layoutSubviews() {
@@ -357,21 +332,17 @@ public class LiquidGlassView: UIView {
         blurView?.frame = bounds
         solidView?.frame = bounds
         decorLayer.frame = bounds
+
         if bounds.size != lastRenderedSize {
             lastRenderedSize = bounds.size
             renderDecorLayer()
         }
-        
+
         layer.shadowPath = UIBezierPath(
             roundedRect: bounds,
             cornerRadius: cornerRadius * 0.85
         ).cgPath
         updateCornersAndShadow()
-        
-        innerShadowLayer.frame = bounds
-        innerShadowLayer.cornerRadius = cornerRadius
-        renderInnerShadow()
-
     }
 
     private func updateCornersAndShadow() {
@@ -389,24 +360,10 @@ public class LiquidGlassView: UIView {
         blurView?.layer.cornerRadius = cornerRadius
     }
 
-    private func applySaturationBoost() {
-
-    }
+    private func applySaturationBoost() { }
 }
 
-
-fileprivate struct CacheKey: Hashable {
-    let width: CGFloat
-    let height: CGFloat
-    let tintHex: UInt32
-    
-    init(size: CGSize, tint: UIColor) {
-        width = (size.width * 100).rounded() / 100
-        height = (size.height * 100).rounded() / 100
-        tintHex = tint.hexValue
-    }
-}
-
+// MARK: - Cache
 fileprivate extension UIColor {
     var hexValue: UInt32 {
         var r: CGFloat = 0
@@ -432,15 +389,9 @@ public final class LiquidGlassCache {
     }
 }
 
-
-import UIKit
-
+// MARK: - Inner Shadow Helper
 extension UIView {
-    func drawInnerShadow(path: UIBezierPath,
-                         shadowColor: UIColor,
-                         offset: CGSize,
-                         blurRadius: CGFloat) {
-
+    func drawInnerShadow(path: UIBezierPath, shadowColor: UIColor, offset: CGSize, blurRadius: CGFloat) {
         guard let context = UIGraphicsGetCurrentContext() else { return }
 
         context.saveGState()
@@ -452,16 +403,11 @@ extension UIView {
 
         context.setAlpha(cgShadowColor.alpha)
         context.beginTransparencyLayer(auxiliaryInfo: nil)
-
-        context.setShadow(offset: offset,
-                          blur: blurRadius,
-                          color: opaqueShadowColor)
-
+        context.setShadow(offset: offset, blur: blurRadius, color: opaqueShadowColor)
         context.setBlendMode(.sourceOut)
         context.setFillColor(opaqueShadowColor ?? UIColor.black.cgColor)
         context.addPath(path.cgPath)
         context.fillPath()
-
         context.endTransparencyLayer()
         context.restoreGState()
     }
