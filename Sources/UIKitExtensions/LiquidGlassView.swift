@@ -284,40 +284,36 @@ public class LiquidGlassView: UIView {
             tempLayer.addSublayer(rim)
         }
 
-        // INNER SHADOW (Gradient-based, visible)
+        // INNER SHADOW
         if filterOptions.contains(.innerShadow) {
-            let innerShadowLayer = CALayer()
-            innerShadowLayer.frame = bounds
-            innerShadowLayer.cornerRadius = cornerRadius
-            innerShadowLayer.masksToBounds = true
+            let key = "innerShadow_\(Int(bounds.width))x\(Int(bounds.height))_\(cornerRadius)"
+            if let cached = renderCache.object(forKey: key as NSString) {
+                let shadowLayer = CALayer()
+                shadowLayer.frame = bounds
+                shadowLayer.contents = cached
+                tempLayer.addSublayer(shadowLayer)
+            } else {
+                UIGraphicsBeginImageContextWithOptions(bounds.size, false, UIScreen.main.scale)
+                if let ctx = UIGraphicsGetCurrentContext() {
+                    let path = UIBezierPath(roundedRect: bounds, cornerRadius: cornerRadius * 0.85)
+                    UIView().drawInnerShadow(
+                        path: path,
+                        shadowColor: UIColor.black.withAlphaComponent(0.5),
+                        offset: CGSize(width: 0, height: 2),
+                        blurRadius: 6
+                    )
+                    if let image = UIGraphicsGetImageFromCurrentImageContext()?.cgImage {
+                        renderCache.setObject(image, forKey: key as NSString)
+                        let shadowLayer = CALayer()
+                        shadowLayer.frame = bounds
+                        shadowLayer.contents = image
+                        tempLayer.addSublayer(shadowLayer)
+                    }
+                }
+                UIGraphicsEndImageContext()
+            }
 
-            // Top shadow (like your previous offset)
-            let topShadow = CAGradientLayer()
-            topShadow.frame = bounds
-            topShadow.colors = [
-                UIColor.black.withAlphaComponent(0.5).cgColor, // shadow color
-                UIColor.clear.cgColor
-            ]
-            topShadow.startPoint = CGPoint(x: 0.5, y: 0)
-            topShadow.endPoint = CGPoint(x: 0.5, y: 0.5)
-            topShadow.cornerRadius = cornerRadius
-            innerShadowLayer.addSublayer(topShadow)
-
-            // Bottom shadow (optional subtle glow)
-            let bottomShadow = CAGradientLayer()
-            bottomShadow.frame = bounds
-            bottomShadow.colors = [
-                UIColor.clear.cgColor,
-                UIColor.black.withAlphaComponent(0.15).cgColor
-            ]
-            bottomShadow.startPoint = CGPoint(x: 0.5, y: 0.5)
-            bottomShadow.endPoint = CGPoint(x: 0.5, y: 1)
-            bottomShadow.cornerRadius = cornerRadius
-            innerShadowLayer.addSublayer(bottomShadow)
-
-            tempLayer.addSublayer(innerShadowLayer)
         }
-
 
         // Render async
         LiquidGlassView.renderQueue.async { [weak self] in
