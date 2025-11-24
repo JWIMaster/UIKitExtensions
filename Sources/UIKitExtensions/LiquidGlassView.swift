@@ -285,31 +285,33 @@ public class LiquidGlassView: UIView {
         }
 
         // INNER SHADOW
+        // INNER SHADOW
         if filterOptions.contains(.innerShadow) {
-            LiquidGlassView.renderQueue.async { [weak self] in
-                guard let self = self else { return }
+            let innerShadowLayer = CALayer()
+            innerShadowLayer.frame = bounds
+            innerShadowLayer.cornerRadius = cornerRadius
+            innerShadowLayer.masksToBounds = true
 
-                UIGraphicsBeginImageContextWithOptions(self.bounds.size, false, UIScreen.main.scale)
-                if let ctx = UIGraphicsGetCurrentContext() {
-                    let path = UIBezierPath(roundedRect: self.bounds, cornerRadius: self.cornerRadius * 0.85)
-                    UIView().drawInnerShadow(
-                        path: path,
-                        shadowColor: UIColor.black.withAlphaComponent(0.5),
-                        offset: CGSize(width: 0, height: 2),
-                        blurRadius: 6
-                    )
+            let shadowLayer = CALayer()
+            shadowLayer.frame = innerShadowLayer.bounds
+            shadowLayer.cornerRadius = cornerRadius
+            shadowLayer.backgroundColor = UIColor.clear.cgColor
+            shadowLayer.shadowColor = UIColor.black.withAlphaComponent(0.5).cgColor
+            shadowLayer.shadowOffset = CGSize(width: 0, height: 2)
+            shadowLayer.shadowRadius = 6
+            shadowLayer.shadowOpacity = 1
 
-                    if let shadowImage = UIGraphicsGetImageFromCurrentImageContext()?.cgImage {
-                        DispatchQueue.main.async {
-                            let shadowLayer = CALayer()
-                            shadowLayer.frame = self.bounds
-                            shadowLayer.contents = shadowImage
-                            self.decorLayer.addSublayer(shadowLayer)
-                        }
-                    }
-                }
-                UIGraphicsEndImageContext()
-            }
+            // Create a mask that inverts the shadow
+            let maskLayer = CAShapeLayer()
+            let outerRect = bounds.insetBy(dx: -12, dy: -12) // extend out by blur*2
+            let path = UIBezierPath(roundedRect: outerRect, cornerRadius: cornerRadius + 12)
+            let innerPath = UIBezierPath(roundedRect: bounds, cornerRadius: cornerRadius).reversing()
+            path.append(innerPath)
+            maskLayer.path = path.cgPath
+            shadowLayer.mask = maskLayer
+
+            innerShadowLayer.addSublayer(shadowLayer)
+            tempLayer.addSublayer(innerShadowLayer)
         }
 
 
