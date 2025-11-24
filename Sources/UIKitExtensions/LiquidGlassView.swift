@@ -59,11 +59,15 @@ public class LiquidGlassView: UIView {
     }
 
     public var tintColorForGlass: UIColor = UIColor.blue.withAlphaComponent(0.05) {
-        didSet { renderDecorLayer() }
+        didSet {
+            renderDecorLayer()
+        }
     }
 
     public var tintGradientColors: [UIColor]? {
-        didSet { renderDecorLayer() }
+        didSet {
+            renderDecorLayer()
+        }
     }
 
     public enum AdvancedFilterOptions {
@@ -280,26 +284,25 @@ public class LiquidGlassView: UIView {
             tempLayer.addSublayer(rim)
         }
 
-        // INNER SHADOW (CAShapeLayer)
+        // INNER SHADOW
         if filterOptions.contains(.innerShadow) {
-            let shadowLayer = CAShapeLayer()
-            shadowLayer.name = "innerShadow"
-            shadowLayer.frame = bounds
-
-            let inset: CGFloat = 6
-            let outerPath = UIBezierPath(roundedRect: bounds.insetBy(dx: -inset, dy: -inset), cornerRadius: cornerRadius)
-            let innerPath = UIBezierPath(roundedRect: bounds, cornerRadius: cornerRadius).reversing()
-            outerPath.append(innerPath)
-
-            shadowLayer.path = outerPath.cgPath
-            shadowLayer.fillColor = UIColor.clear.cgColor
-            shadowLayer.shadowColor = UIColor.black.cgColor
-            shadowLayer.shadowOffset = CGSize(width: 0, height: 2)
-            shadowLayer.shadowOpacity = 0.5
-            shadowLayer.shadowRadius = 6
-            shadowLayer.masksToBounds = true
-
-            tempLayer.addSublayer(shadowLayer)
+            UIGraphicsBeginImageContextWithOptions(bounds.size, false, UIScreen.main.scale)
+            if let ctx = UIGraphicsGetCurrentContext() {
+                let path = UIBezierPath(roundedRect: bounds, cornerRadius: cornerRadius * 0.85)
+                UIView().drawInnerShadow(
+                    path: path,
+                    shadowColor: UIColor.black.withAlphaComponent(0.5),
+                    offset: CGSize(width: 0, height: 2),
+                    blurRadius: 6
+                )
+                if let shadowImage = UIGraphicsGetImageFromCurrentImageContext()?.cgImage {
+                    let shadowLayer = CALayer()
+                    shadowLayer.frame = bounds
+                    shadowLayer.contents = shadowImage
+                    tempLayer.addSublayer(shadowLayer)
+                }
+            }
+            UIGraphicsEndImageContext()
         }
 
         // Render async
@@ -383,5 +386,29 @@ public final class LiquidGlassCache {
     public init() {
         cache.countLimit = 300
         cache.totalCostLimit = 80_000_000
+    }
+}
+
+// MARK: - Inner Shadow Helper
+extension UIView {
+    func drawInnerShadow(path: UIBezierPath, shadowColor: UIColor, offset: CGSize, blurRadius: CGFloat) {
+        guard let context = UIGraphicsGetCurrentContext() else { return }
+
+        context.saveGState()
+        context.addPath(path.cgPath)
+        context.clip()
+
+        let cgShadowColor = shadowColor.cgColor
+        let opaqueShadowColor = cgShadowColor.copy(alpha: 1.0)
+
+        context.setAlpha(cgShadowColor.alpha)
+        context.beginTransparencyLayer(auxiliaryInfo: nil)
+        context.setShadow(offset: offset, blur: blurRadius, color: opaqueShadowColor)
+        context.setBlendMode(.sourceOut)
+        context.setFillColor(opaqueShadowColor ?? UIColor.black.cgColor)
+        context.addPath(path.cgPath)
+        context.fillPath()
+        context.endTransparencyLayer()
+        context.restoreGState()
     }
 }
