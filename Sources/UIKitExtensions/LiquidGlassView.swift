@@ -286,24 +286,32 @@ public class LiquidGlassView: UIView {
 
         // INNER SHADOW
         if filterOptions.contains(.innerShadow) {
-            UIGraphicsBeginImageContextWithOptions(bounds.size, false, UIScreen.main.scale)
-            if let ctx = UIGraphicsGetCurrentContext() {
-                let path = UIBezierPath(roundedRect: bounds, cornerRadius: cornerRadius * 0.85)
-                UIView().drawInnerShadow(
-                    path: path,
-                    shadowColor: UIColor.black.withAlphaComponent(0.5),
-                    offset: CGSize(width: 0, height: 2),
-                    blurRadius: 6
-                )
-                if let shadowImage = UIGraphicsGetImageFromCurrentImageContext()?.cgImage {
-                    let shadowLayer = CALayer()
-                    shadowLayer.frame = bounds
-                    shadowLayer.contents = shadowImage
-                    tempLayer.addSublayer(shadowLayer)
+            LiquidGlassView.renderQueue.async { [weak self] in
+                guard let self = self else { return }
+
+                UIGraphicsBeginImageContextWithOptions(self.bounds.size, false, UIScreen.main.scale)
+                if let ctx = UIGraphicsGetCurrentContext() {
+                    let path = UIBezierPath(roundedRect: self.bounds, cornerRadius: self.cornerRadius * 0.85)
+                    UIView().drawInnerShadow(
+                        path: path,
+                        shadowColor: UIColor.black.withAlphaComponent(0.5),
+                        offset: CGSize(width: 0, height: 2),
+                        blurRadius: 6
+                    )
+
+                    if let shadowImage = UIGraphicsGetImageFromCurrentImageContext()?.cgImage {
+                        DispatchQueue.main.async {
+                            let shadowLayer = CALayer()
+                            shadowLayer.frame = self.bounds
+                            shadowLayer.contents = shadowImage
+                            self.decorLayer.addSublayer(shadowLayer)
+                        }
+                    }
                 }
+                UIGraphicsEndImageContext()
             }
-            UIGraphicsEndImageContext()
         }
+
 
         // Render async
         LiquidGlassView.renderQueue.async { [weak self] in
