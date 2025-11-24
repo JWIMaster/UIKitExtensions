@@ -189,7 +189,7 @@ public class LiquidGlassView: UIView {
         layer.addSublayer(decorLayer)
         innerShadowLayer.masksToBounds = true
         innerShadowLayer.cornerRadius = cornerRadius
-        layer.addSublayer(innerShadowLayer)
+        //layer.addSublayer(innerShadowLayer)
         
         decorLayer.isOpaque = false
         decorLayer.backgroundColor = UIColor.clear.cgColor
