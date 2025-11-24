@@ -292,7 +292,7 @@ public class LiquidGlassView: UIView {
             outerPath.append(innerPath)
 
             shadowLayer.path = outerPath.cgPath
-            shadowLayer.fillColor = UIColor.black.cgColor
+            shadowLayer.fillColor = UIColor.clear.cgColor
             shadowLayer.shadowColor = UIColor.black.cgColor
             shadowLayer.shadowOffset = CGSize(width: 0, height: 2)
             shadowLayer.shadowOpacity = 0.5
