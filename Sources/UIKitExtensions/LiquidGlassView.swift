@@ -292,6 +292,7 @@ public class LiquidGlassView: UIView {
                 shadowLayer.frame = bounds
                 shadowLayer.contents = cached
                 tempLayer.addSublayer(shadowLayer)
+                print("used cache \(key)")
             } else {
                 UIGraphicsBeginImageContextWithOptions(bounds.size, false, UIScreen.main.scale)
                 if let ctx = UIGraphicsGetCurrentContext() {
