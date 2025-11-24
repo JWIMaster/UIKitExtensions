@@ -70,7 +70,7 @@ public class LiquidGlassView: UIView {
         }
     }
 
-    public enum AdvancedFilterOptions {
+    public enum AdvancedFilterOptions: CaseIterable {
         case tint, darken, highlight, depth, rim, innerShadow
     }
 
