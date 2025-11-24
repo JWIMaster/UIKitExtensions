@@ -189,17 +189,7 @@ public class LiquidGlassView: UIView {
         layer.addSublayer(decorLayer)
         innerShadowLayer.masksToBounds = true
         innerShadowLayer.cornerRadius = cornerRadius
-        //layer.addSublayer(innerShadowLayer)
-        
-        decorLayer.isOpaque = false
-        decorLayer.backgroundColor = UIColor.clear.cgColor
-        decorLayer.contentsScale = UIScreen.main.scale
-        decorLayer.contentsGravity = .resize
-
-        innerShadowLayer.isOpaque = false
-        innerShadowLayer.backgroundColor = UIColor.clear.cgColor
-        innerShadowLayer.contentsScale = UIScreen.main.scale
-        innerShadowLayer.contentsGravity = .resize
+        layer.addSublayer(innerShadowLayer)
 
 
     }
@@ -341,7 +331,7 @@ public class LiquidGlassView: UIView {
 
         let path = UIBezierPath(
             roundedRect: bounds,
-            cornerRadius: cornerRadius
+            cornerRadius: cornerRadius * 0.85
         )
 
         UIGraphicsBeginImageContextWithOptions(size, false, UIScreen.main.scale)
