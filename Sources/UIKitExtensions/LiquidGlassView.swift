@@ -284,27 +284,27 @@ public class LiquidGlassView: UIView {
             tempLayer.addSublayer(rim)
         }
 
-        // INNER SHADOW
-        // INNER SHADOW
+        // INNER SHADOW (CALayer-based, closely matches old UIGraphics look)
         if filterOptions.contains(.innerShadow) {
             let innerShadowLayer = CALayer()
             innerShadowLayer.frame = bounds
             innerShadowLayer.cornerRadius = cornerRadius
             innerShadowLayer.masksToBounds = true
 
+            // Shadow layer
             let shadowLayer = CALayer()
             shadowLayer.frame = innerShadowLayer.bounds
-            shadowLayer.cornerRadius = cornerRadius
             shadowLayer.backgroundColor = UIColor.clear.cgColor
-            shadowLayer.shadowColor = UIColor.black.withAlphaComponent(0.5).cgColor
-            shadowLayer.shadowOffset = CGSize(width: 0, height: 2)
-            shadowLayer.shadowRadius = 6
-            shadowLayer.shadowOpacity = 1
+            shadowLayer.cornerRadius = cornerRadius
+            shadowLayer.shadowColor = UIColor.black.cgColor
+            shadowLayer.shadowOpacity = 0.5   // matches previous alpha
+            shadowLayer.shadowOffset = CGSize(width: 0, height: 2) // same as before
+            shadowLayer.shadowRadius = 6      // soft blur like UIGraphics
 
-            // Create a mask that inverts the shadow
+            // Create a mask to invert the shadow so it only appears inside
             let maskLayer = CAShapeLayer()
-            let outerRect = bounds.insetBy(dx: -12, dy: -12) // extend out by blur*2
-            let path = UIBezierPath(roundedRect: outerRect, cornerRadius: cornerRadius + 12)
+            let extended = bounds.insetBy(dx: -shadowLayer.shadowRadius*2, dy: -shadowLayer.shadowRadius*2)
+            let path = UIBezierPath(roundedRect: extended, cornerRadius: cornerRadius + shadowLayer.shadowRadius*2)
             let innerPath = UIBezierPath(roundedRect: bounds, cornerRadius: cornerRadius).reversing()
             path.append(innerPath)
             maskLayer.path = path.cgPath
