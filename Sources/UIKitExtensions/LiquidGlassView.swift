@@ -336,6 +336,15 @@ public class LiquidGlassView: UIView {
         ).cgPath
         updateCornersAndShadow()
     }
+    
+    public override func draw(_ rect: CGRect) {
+        let path = UIBezierPath(roundedRect: bounds, cornerRadius: self.cornerRadius)
+        drawInnerShadow(path: path,
+                        shadowColor: UIColor.black.withAlphaComponent(0.5),
+                        offset: CGSize(width: 0, height: 2),
+                        blurRadius: 6)
+    }
+
 
     private func updateCornersAndShadow() {
         layer.cornerRadius = cornerRadius
@@ -396,3 +405,36 @@ public final class LiquidGlassCache {
 }
 
 
+import UIKit
+
+extension UIView {
+    func drawInnerShadow(path: UIBezierPath,
+                         shadowColor: UIColor,
+                         offset: CGSize,
+                         blurRadius: CGFloat) {
+
+        guard let context = UIGraphicsGetCurrentContext() else { return }
+
+        context.saveGState()
+        context.addPath(path.cgPath)
+        context.clip()
+
+        let cgShadowColor = shadowColor.cgColor
+        let opaqueShadowColor = cgShadowColor.copy(alpha: 1.0)
+
+        context.setAlpha(cgShadowColor.alpha)
+        context.beginTransparencyLayer(auxiliaryInfo: nil)
+
+        context.setShadow(offset: offset,
+                          blur: blurRadius,
+                          color: opaqueShadowColor)
+
+        context.setBlendMode(.sourceOut)
+        context.setFillColor(opaqueShadowColor ?? UIColor.black.cgColor)
+        context.addPath(path.cgPath)
+        context.fillPath()
+
+        context.endTransparencyLayer()
+        context.restoreGState()
+    }
+}
