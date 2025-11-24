@@ -144,7 +144,10 @@ public class LiquidGlassView: UIView {
     {
         self.init(blurRadius: blurRadius, cornerRadius: cornerRadius, snapshotTargetView: snapshotTargetView, disableBlur: disableBlur, filterOptions: [.tint, .depth, .darken, .highlight, .rim])
     }
+    
+    private let innerShadowLayer = CALayer()
 
+    
     required init?(coder: NSCoder) {
         self.filterOptions = [.tint, .depth, .darken, .highlight, .rim]
         super.init(coder: coder)
@@ -184,6 +187,10 @@ public class LiquidGlassView: UIView {
         decorLayer.cornerRadius = cornerRadius
         decorLayer.masksToBounds = true
         layer.addSublayer(decorLayer)
+        innerShadowLayer.masksToBounds = true
+        innerShadowLayer.cornerRadius = cornerRadius
+        layer.addSublayer(innerShadowLayer)
+
     }
 
     // MARK: - Render Decor Layer
@@ -316,6 +323,30 @@ public class LiquidGlassView: UIView {
             }
         }
     }
+    
+    private func renderInnerShadow() {
+        let size = bounds.size
+        guard size.width > 0, size.height > 0 else { return }
+
+        let path = UIBezierPath(
+            roundedRect: bounds,
+            cornerRadius: cornerRadius
+        )
+
+        UIGraphicsBeginImageContextWithOptions(size, false, UIScreen.main.scale)
+        if let ctx = UIGraphicsGetCurrentContext() {
+            // draw using your extension
+            drawInnerShadow(
+                path: path,
+                shadowColor: UIColor.black.withAlphaComponent(0.5),
+                offset: CGSize(width: 0, height: 2),
+                blurRadius: 6
+            )
+            innerShadowLayer.contents = UIGraphicsGetImageFromCurrentImageContext()?.cgImage
+        }
+        UIGraphicsEndImageContext()
+    }
+
 
 
 
@@ -335,16 +366,12 @@ public class LiquidGlassView: UIView {
             cornerRadius: cornerRadius * 0.85
         ).cgPath
         updateCornersAndShadow()
-    }
-    
-    public override func draw(_ rect: CGRect) {
-        let path = UIBezierPath(roundedRect: bounds, cornerRadius: self.cornerRadius)
-        drawInnerShadow(path: path,
-                        shadowColor: UIColor.black.withAlphaComponent(0.5),
-                        offset: CGSize(width: 0, height: 2),
-                        blurRadius: 6)
-    }
+        
+        innerShadowLayer.frame = bounds
+        innerShadowLayer.cornerRadius = cornerRadius
+        renderInnerShadow()
 
+    }
 
     private func updateCornersAndShadow() {
         layer.cornerRadius = cornerRadius
