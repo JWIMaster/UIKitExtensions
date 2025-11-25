@@ -6,7 +6,7 @@
       "location" : "https://github.com/JWIMaster/FoundationCompatKit.git",
       "state" : {
         "branch" : "master",
-        "revision" : "05522f9fb0e3345246d1f6abc4aa7ec590f3bbae"
+        "revision" : "f3a201e8c1cca5121528cc6531dd0ef11d9039cb"
       }
     },
     {
@@ -15,7 +15,7 @@
       "location" : "https://github.com/JWIMaster/UIKitCompatKit",
       "state" : {
         "branch" : "master",
-        "revision" : "709a64783577a80fa0e024461fd77f82ceb1cbcb"
+        "revision" : "849fc58f7c1779391ba5e8efe6bf670d9c0db770"
       }
     }
   ],
