@@ -205,133 +205,135 @@ public class LiquidGlassView: UIView {
             return
         }
 
-        guard bounds.width > 0, bounds.height > 0 else { return }
-        guard self.window != nil else { return }
+        guard bounds.width > 0, bounds.height > 0, self.window != nil, self.frame != .zero, self.isHidden != true else { return }
+
 
         let tempLayer = CALayer()
 
         // TINT
-        if !filterExclusions.contains(.tint) {
-            let tintLayer = CAGradientLayer()
-            tintLayer.frame = bounds
-            tintLayer.cornerRadius = cornerRadius
-            tintLayer.masksToBounds = true
-            tintLayer.compositingFilter = "softLightBlendMode"
-            if let colors = tintGradientColors, !colors.isEmpty {
-                tintLayer.colors = colors.map { $0.withIncreasedSaturation(factor: saturationBoost).cgColor }
-                tintLayer.startPoint = CGPoint(x: 0.5, y: 0)
-                tintLayer.endPoint = CGPoint(x: 0.5, y: 1)
-            } else {
-                tintLayer.backgroundColor = tintColorForGlass.withIncreasedSaturation(factor: saturationBoost).cgColor
+        LiquidGlassView.renderQueue.async { [self] in
+            if !filterExclusions.contains(.tint) {
+                let tintLayer = CAGradientLayer()
+                tintLayer.frame = bounds
+                tintLayer.cornerRadius = cornerRadius
+                tintLayer.masksToBounds = true
+                tintLayer.compositingFilter = "softLightBlendMode"
+                if let colors = tintGradientColors, !colors.isEmpty {
+                    tintLayer.colors = colors.map { $0.withIncreasedSaturation(factor: saturationBoost).cgColor }
+                    tintLayer.startPoint = CGPoint(x: 0.5, y: 0)
+                    tintLayer.endPoint = CGPoint(x: 0.5, y: 1)
+                } else {
+                    tintLayer.backgroundColor = tintColorForGlass.withIncreasedSaturation(factor: saturationBoost).cgColor
+                }
+                tempLayer.addSublayer(tintLayer)
             }
-            tempLayer.addSublayer(tintLayer)
-        }
 
-        // DARKEN
-        if !filterExclusions.contains(.darken) {
-            let darken = CAGradientLayer()
-            darken.colors = [UIColor.black.withAlphaComponent(0.22).cgColor, UIColor.clear.cgColor]
-            darken.startPoint = CGPoint(x: 0.5, y: 1)
-            darken.endPoint = CGPoint(x: 0.5, y: 0)
-            darken.cornerRadius = cornerRadius
-            darken.compositingFilter = "multiplyBlendMode"
-            darken.frame = bounds
-            tempLayer.addSublayer(darken)
-        }
+            // DARKEN
+            if !filterExclusions.contains(.darken) {
+                let darken = CAGradientLayer()
+                darken.colors = [UIColor.black.withAlphaComponent(0.22).cgColor, UIColor.clear.cgColor]
+                darken.startPoint = CGPoint(x: 0.5, y: 1)
+                darken.endPoint = CGPoint(x: 0.5, y: 0)
+                darken.cornerRadius = cornerRadius
+                darken.compositingFilter = "multiplyBlendMode"
+                darken.frame = bounds
+                tempLayer.addSublayer(darken)
+            }
 
-        // HIGHLIGHT
-        if !filterExclusions.contains(.highlight) {
-            let highlight = CAGradientLayer()
-            highlight.colors = [
-                UIColor.white.withAlphaComponent(0.25).cgColor,
-                UIColor.clear.cgColor,
-                UIColor.white.withAlphaComponent(0.2).cgColor,
-                UIColor.white.withAlphaComponent(0.1).cgColor
-            ]
-            highlight.locations = [0.0, 0.25, 0.9, 1.0]
-            highlight.startPoint = CGPoint(x: 0, y: 0)
-            highlight.endPoint = CGPoint(x: 1, y: 1)
-            highlight.cornerRadius = cornerRadius
-            highlight.compositingFilter = "screenBlendMode"
-            highlight.frame = bounds
-            tempLayer.addSublayer(highlight)
-        }
+            // HIGHLIGHT
+            if !filterExclusions.contains(.highlight) {
+                let highlight = CAGradientLayer()
+                highlight.colors = [
+                    UIColor.white.withAlphaComponent(0.25).cgColor,
+                    UIColor.clear.cgColor,
+                    UIColor.white.withAlphaComponent(0.2).cgColor,
+                    UIColor.white.withAlphaComponent(0.1).cgColor
+                ]
+                highlight.locations = [0.0, 0.25, 0.9, 1.0]
+                highlight.startPoint = CGPoint(x: 0, y: 0)
+                highlight.endPoint = CGPoint(x: 1, y: 1)
+                highlight.cornerRadius = cornerRadius
+                highlight.compositingFilter = "screenBlendMode"
+                highlight.frame = bounds
+                tempLayer.addSublayer(highlight)
+            }
 
-        // DEPTH
-        if !filterExclusions.contains(.depth) {
-            let innerDepth = CAGradientLayer()
-            innerDepth.colors = [
-                UIColor.black.withAlphaComponent(0.15).cgColor,
-                UIColor.clear.cgColor,
-                UIColor.white.withAlphaComponent(0.05).cgColor
-            ]
-            innerDepth.locations = [0.0, 0.6, 1.0]
-            innerDepth.startPoint = CGPoint(x: 0.5, y: 1)
-            innerDepth.endPoint = CGPoint(x: 0.5, y: 0)
-            innerDepth.cornerRadius = cornerRadius
-            innerDepth.compositingFilter = "softLightBlendMode"
-            innerDepth.frame = bounds
-            tempLayer.addSublayer(innerDepth)
-        }
+            // DEPTH
+            if !filterExclusions.contains(.depth) {
+                let innerDepth = CAGradientLayer()
+                innerDepth.colors = [
+                    UIColor.black.withAlphaComponent(0.15).cgColor,
+                    UIColor.clear.cgColor,
+                    UIColor.white.withAlphaComponent(0.05).cgColor
+                ]
+                innerDepth.locations = [0.0, 0.6, 1.0]
+                innerDepth.startPoint = CGPoint(x: 0.5, y: 1)
+                innerDepth.endPoint = CGPoint(x: 0.5, y: 0)
+                innerDepth.cornerRadius = cornerRadius
+                innerDepth.compositingFilter = "softLightBlendMode"
+                innerDepth.frame = bounds
+                tempLayer.addSublayer(innerDepth)
+            }
 
-        // RIM
-        if !filterExclusions.contains(.rim) {
-            let rim = CALayer()
-            rim.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
-            rim.borderWidth = 0.8
-            rim.cornerRadius = cornerRadius
-            rim.frame = bounds
-            tempLayer.addSublayer(rim)
-        }
+            // RIM
+            if !filterExclusions.contains(.rim) {
+                let rim = CALayer()
+                rim.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
+                rim.borderWidth = 0.8
+                rim.cornerRadius = cornerRadius
+                rim.frame = bounds
+                tempLayer.addSublayer(rim)
+            }
 
-        // INNER SHADOW
-        if !filterExclusions.contains(.innerShadow) {
-            let key = "innerShadow_\(Int(bounds.width))x\(Int(bounds.height))_\(cornerRadius)"
-            if let cached = renderCache.object(forKey: key as NSString) {
-                let shadowLayer = CALayer()
-                shadowLayer.frame = bounds
-                shadowLayer.contents = cached
-                tempLayer.addSublayer(shadowLayer)
-            } else {
-                UIGraphicsBeginImageContextWithOptions(bounds.size, false, UIScreen.main.scale)
-                if let ctx = UIGraphicsGetCurrentContext() {
-                    let path = UIBezierPath(roundedRect: bounds, cornerRadius: cornerRadius * 0.85)
-                    UIView().drawInnerShadow(
-                        path: path,
-                        shadowColor: UIColor.black.withAlphaComponent(0.5),
-                        offset: CGSize(width: 0, height: 2),
-                        blurRadius: 6
-                    )
-                    if let image = UIGraphicsGetImageFromCurrentImageContext()?.cgImage {
-                        renderCache.setObject(image, forKey: key as NSString)
-                        let shadowLayer = CALayer()
-                        shadowLayer.frame = bounds
-                        shadowLayer.contents = image
-                        tempLayer.addSublayer(shadowLayer)
+            // INNER SHADOW
+            if !filterExclusions.contains(.innerShadow) {
+                let key = "innerShadow_\(Int(bounds.width))x\(Int(bounds.height))_\(cornerRadius)"
+                if let cached = renderCache.object(forKey: key as NSString) {
+                    let shadowLayer = CALayer()
+                    shadowLayer.frame = bounds
+                    shadowLayer.contents = cached
+                    tempLayer.addSublayer(shadowLayer)
+                } else {
+                    UIGraphicsBeginImageContextWithOptions(bounds.size, false, UIScreen.main.scale)
+                    if let ctx = UIGraphicsGetCurrentContext() {
+                        let path = UIBezierPath(roundedRect: bounds, cornerRadius: cornerRadius * 0.85)
+                        UIView().drawInnerShadow(
+                            path: path,
+                            shadowColor: UIColor.black.withAlphaComponent(0.5),
+                            offset: CGSize(width: 0, height: 2),
+                            blurRadius: 6
+                        )
+                        if let image = UIGraphicsGetImageFromCurrentImageContext()?.cgImage {
+                            renderCache.setObject(image, forKey: key as NSString)
+                            let shadowLayer = CALayer()
+                            shadowLayer.frame = bounds
+                            shadowLayer.contents = image
+                            tempLayer.addSublayer(shadowLayer)
+                        }
                     }
+                    UIGraphicsEndImageContext()
+                }
+
+            }
+
+            // Render async
+            LiquidGlassView.renderQueue.async { [weak self] in
+                guard let self = self else { return }
+                UIGraphicsBeginImageContextWithOptions(size, false, UIScreen.main.scale)
+                if let ctx = UIGraphicsGetCurrentContext() {
+                    tempLayer.render(in: ctx)
+                }
+                guard let renderedImage = UIGraphicsGetImageFromCurrentImageContext()?.cgImage else {
+                    UIGraphicsEndImageContext()
+                    return
                 }
                 UIGraphicsEndImageContext()
-            }
+                tempLayer.sublayers?.removeAll()
 
-        }
-
-        // Render async
-        LiquidGlassView.renderQueue.async { [weak self] in
-            guard let self = self else { return }
-            UIGraphicsBeginImageContextWithOptions(size, false, UIScreen.main.scale)
-            if let ctx = UIGraphicsGetCurrentContext() {
-                tempLayer.render(in: ctx)
-            }
-            guard let renderedImage = UIGraphicsGetImageFromCurrentImageContext()?.cgImage else {
-                UIGraphicsEndImageContext()
-                return
-            }
-            UIGraphicsEndImageContext()
-            tempLayer.sublayers?.removeAll()
-
-            self.renderCache.setObject(renderedImage, forKey: key)
-            DispatchQueue.main.async {
-                self.decorLayer.contents = renderedImage
+                self.renderCache.setObject(renderedImage, forKey: key)
+                DispatchQueue.main.async {
+                    self.decorLayer.contents = renderedImage
+                }
             }
         }
     }
