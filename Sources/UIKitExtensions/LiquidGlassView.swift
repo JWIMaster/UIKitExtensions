@@ -2,50 +2,146 @@ import UIKit
 import LiveFrost
 import FoundationCompatKit
 
+/// Liquid Glass/Aqua fuse class, inherits from UIView. Contains a UIBlurEffect on iOS 9+
+/// Components are fully configurable, as well as most aspects of the view
 public class LiquidGlassView: UIView {
 
     // MARK: - Configurable properties
     public var cornerRadius: CGFloat = 50 {
-        didSet { updateCornersAndShadow() }
-    }
-    public var shadowOpacity: Float = 0.6 { didSet { updateCornersAndShadow() } }
-    public var shadowRadius: CGFloat = 12 { didSet { updateCornersAndShadow() } }
-    public var shadowColor: CGColor = UIColor.black.cgColor { didSet { updateCornersAndShadow() } }
-    public var shadowOffset: CGSize = .zero { didSet { updateCornersAndShadow() } }
-    public var saturationBoost: CGFloat = 1.1 { didSet { updateGradientLayers() } }
-    public var blurRadius: CGFloat = 12 {
         didSet {
-            if let blurView = self.blurView as? LFGlassView { blurView.blurRadius = blurRadius }
-            else if #available(iOS 14.0, *), let blurView = self.blurView as? VisualEffectView { blurView.blurRadius = blurRadius }
-            else if #available(iOS 9.0, *), let blurView = self.blurView as? VisualEffectView1 { blurView.blurRadius = blurRadius }
+            guard !isInitialising else { return }
+            updateCornersAndShadow()
         }
     }
-    public var scaleFactor: CGFloat = 0.4 { didSet { (blurView as? LFGlassView)?.scaleFactor = scaleFactor } }
-    public var frameInterval: Int = 3 { didSet { (blurView as? LFGlassView)?.frameInterval = UInt(frameInterval) } }
-    public var isLiveBlurring: Bool = true { didSet { (blurView as? LFGlassView)?.isLiveBlurring = isLiveBlurring } }
-    public weak var snapshotTargetView: UIView? { didSet { (blurView as? LFGlassView)?.snapshotTargetView = snapshotTargetView } }
-    public var tintColorForGlass: UIColor = UIColor.blue.withAlphaComponent(0.05) { didSet { updateGradientLayers() } }
-    public var tintGradientColors: [UIColor]? { didSet { updateGradientLayers() } }
-    public var filterExclusions: [AdvancedFilterOptions] = []
+    public var shadowOpacity: Float = 0.6 {
+        didSet {
+            guard !isInitialising else { return }
+            updateCornersAndShadow()
+        }
+    }
+
+    public var shadowRadius: CGFloat = 12 {
+        didSet {
+            guard !isInitialising else { return }
+            updateCornersAndShadow()
+        }
+    }
+
+    public var shadowColor: CGColor = UIColor.black.cgColor {
+        didSet {
+            guard !isInitialising else { return }
+            updateCornersAndShadow()
+        }
+    }
+
+    public var shadowOffset: CGSize = .zero {
+        didSet {
+            guard !isInitialising else { return }
+            updateCornersAndShadow()
+        }
+    }
+
+    public var saturationBoost: CGFloat = 1.1 {
+        didSet {
+            guard !isInitialising else { return }
+            applySaturationBoost()
+        }
+    }
+
+
+    public var blurRadius: CGFloat = 12 {
+        didSet {
+            guard !isInitialising else { return }
+            if let blurView = self.blurView as? LFGlassView {
+                blurView.blurRadius = blurRadius
+            } else if #available(iOS 14.0, *), let blurView = self.blurView as? VisualEffectView {
+                blurView.blurRadius = blurRadius
+            } else if #available(iOS 9.0, *), let blurView = self.blurView as? VisualEffectView1 {
+                blurView.blurRadius = blurRadius
+            }
+        }
+    }
+
+    public var scaleFactor: CGFloat = 0.4 {
+        didSet {
+            guard !isInitialising else { return }
+            if let blurView = self.blurView as? LFGlassView {
+                blurView.scaleFactor = scaleFactor
+            }
+        }
+    }
+
+    public var frameInterval: Int = 3 {
+        didSet {
+            guard !isInitialising else { return }
+            if let blurView = self.blurView as? LFGlassView {
+                blurView.frameInterval = UInt(frameInterval)
+            }
+        }
+    }
+
+    public var isLiveBlurring: Bool = true {
+        didSet {
+            guard !isInitialising else { return }
+            if let blurView = self.blurView as? LFGlassView {
+                blurView.isLiveBlurring = isLiveBlurring
+            }
+        }
+    }
+
+    public weak var snapshotTargetView: UIView? {
+        didSet {
+            guard !isInitialising else { return }
+            if let blurView = self.blurView as? LFGlassView {
+                blurView.snapshotTargetView = snapshotTargetView
+            }
+        }
+    }
+
+    public var tintColorForGlass: UIColor = UIColor.blue.withAlphaComponent(0.05) {
+        didSet {
+            guard !isInitialising else { return }
+            renderDecorLayer()
+        }
+    }
+
+    public var tintGradientColors: [UIColor]? {
+        didSet {
+            guard !isInitialising else { return }
+            renderDecorLayer()
+        }
+    }
 
     public enum AdvancedFilterOptions: String, CaseIterable {
         case tint, darken, highlight, depth, rim, innerShadow
     }
 
+    public var filterExclusions: [AdvancedFilterOptions]
     public var solidViewColour: UIColor = .clear { didSet { solidView?.backgroundColor = solidViewColour } }
-    public var disableBlur: Bool = false { didSet { updateBlur() } }
+    private var isInitialising = true
+    public var disableBlur: Bool = false {
+        didSet {
+            guard !isInitialising else { return }
+            updateBlur()
+        }
+    }
 
     // MARK: - Subviews
     public var blurView: UIView?
     public var solidView: UIView?
 
-    // Dynamic layers
-    private let tintLayer = CAGradientLayer()
-    private let darkenLayer = CAGradientLayer()
-    private let highlightLayer = CAGradientLayer()
-    private let depthLayer = CAGradientLayer()
-    private let rimLayer = CALayer()
-    private let innerShadowLayer = CALayer()
+    private var decorLayer = CALayer()
+    private static let renderQueue = DispatchQueue(label: "com.yourapp.liquidglass.render", attributes: .concurrent, target: .global(qos: .userInitiated))
+    private var renderCache: NSCache<NSString, CGImage> { LiquidGlassCache.shared.cache }
+    private var lastRenderedSize: CGSize = .zero
+
+    private func cacheKey(for size: CGSize, color: UIColor) -> NSString {
+        let scale = UIScreen.main.scale
+        let w = Int(size.width * scale)
+        let h = Int(size.height * scale)
+        let colorHex = color.hexValue
+        return "\(w)x\(h)_\(colorHex)" as NSString
+    }
 
     // MARK: - Init
     public init(
@@ -53,7 +149,7 @@ public class LiquidGlassView: UIView {
         cornerRadius: CGFloat = 50,
         snapshotTargetView: UIView?,
         disableBlur: Bool = false,
-        filterExclusions: [AdvancedFilterOptions] = []
+        filterExclusions: [AdvancedFilterOptions]
     ) {
         self.filterExclusions = filterExclusions
         super.init(frame: .zero)
@@ -61,29 +157,11 @@ public class LiquidGlassView: UIView {
         self.blurRadius = blurRadius
         self.snapshotTargetView = snapshotTargetView
         self.disableBlur = disableBlur
-        setupBlurOrSolidView()
-        setupLayers()
-        updateCornersAndShadow()
-        updateGradientLayers()
-    }
 
-    required init?(coder: NSCoder) {
-        super.init(coder: coder)
-        setupBlurOrSolidView()
-        setupLayers()
-        updateCornersAndShadow()
-        updateGradientLayers()
-    }
-
-    // MARK: - Setup
-    private func setupBlurOrSolidView() {
-        if disableBlur {
-            solidView = UIView()
-            solidView?.backgroundColor = solidViewColour
-            addSubview(solidView!)
-        } else {
+        if !disableBlur {
             if #available(iOS 14.0, *) {
                 let blur = VisualEffectView()
+                blur.colorTint = .clear
                 blur.blurRadius = blurRadius
                 blurView = blur
             } else if #available(iOS 9.0, *) {
@@ -94,22 +172,216 @@ public class LiquidGlassView: UIView {
                 let blur = LFGlassView()
                 blur.snapshotTargetView = snapshotTargetView
                 blur.blurRadius = blurRadius
-                blur.scaleFactor = scaleFactor
-                blur.frameInterval = UInt(frameInterval)
-                blur.isLiveBlurring = isLiveBlurring
                 blurView = blur
             }
-            if let blurView = blurView { addSubview(blurView) }
+        } else {
+            solidView = UIView()
         }
+        isInitialising = false
+        setupView()
+        renderDecorLayer()
     }
 
-    private func setupLayers() {
-        if !filterExclusions.contains(.tint) { layer.addSublayer(tintLayer) }
-        if !filterExclusions.contains(.darken) { layer.addSublayer(darkenLayer) }
-        if !filterExclusions.contains(.highlight) { layer.addSublayer(highlightLayer) }
-        if !filterExclusions.contains(.depth) { layer.addSublayer(depthLayer) }
-        if !filterExclusions.contains(.rim) { layer.addSublayer(rimLayer) }
-        if !filterExclusions.contains(.innerShadow) { layer.addSublayer(innerShadowLayer) }
+    public convenience init(
+        blurRadius: CGFloat = 12,
+        cornerRadius: CGFloat = 50,
+        snapshotTargetView: UIView?,
+        disableBlur: Bool = false
+    ) {
+        self.init(
+            blurRadius: blurRadius,
+            cornerRadius: cornerRadius,
+            snapshotTargetView: snapshotTargetView,
+            disableBlur: disableBlur,
+            filterExclusions: []
+        )
+    }
+
+    required init?(coder: NSCoder) {
+        self.filterExclusions = []
+        super.init(coder: coder)
+        setupView()
+        renderDecorLayer()
+        applySaturationBoost()
+    }
+
+    // MARK: - Setup
+    private func setupView() {
+        clipsToBounds = true
+        layer.masksToBounds = false
+
+        if disableBlur {
+            if let solidView = solidView {
+                solidView.layer.cornerRadius = cornerRadius
+                solidView.layer.masksToBounds = true
+                addSubview(solidView)
+            }
+        } else if let blurView = blurView as? LFGlassView {
+            blurView.isLiveBlurring = true
+            blurView.layer.cornerRadius = cornerRadius
+            blurView.layer.masksToBounds = true
+            addSubview(blurView)
+        } else if #available(iOS 14.0, *), let blurView = blurView as? VisualEffectView {
+            blurView.layer.cornerRadius = cornerRadius
+            blurView.layer.masksToBounds = true
+            addSubview(blurView)
+            sendSubviewToBack(blurView)
+        } else if #available(iOS 9.0, *), let blurView = blurView as? VisualEffectView1 {
+            blurView.layer.cornerRadius = cornerRadius
+            blurView.layer.masksToBounds = true
+            addSubview(blurView)
+            sendSubviewToBack(blurView)
+        }
+
+        decorLayer.cornerRadius = cornerRadius
+        decorLayer.masksToBounds = true
+        layer.addSublayer(decorLayer)
+    }
+
+    // MARK: - Render Decor Layer
+    private func renderDecorLayer() {
+        let size = bounds.size
+        var key: NSString
+        if let colors = tintGradientColors, !colors.isEmpty {
+            key = cacheKey(for: size, color: colors.first!)
+        } else {
+            key = cacheKey(for: size, color: self.tintColorForGlass)
+        }
+
+        if let cachedImage = self.renderCache.object(forKey: key) {
+            decorLayer.contents = cachedImage
+            return
+        }
+
+        guard bounds.width > 0, bounds.height > 0, self.window != nil, self.frame != .zero, self.isHidden != true else { return }
+
+
+        let tempLayer = CALayer()
+
+        // TINT
+        if !filterExclusions.contains(.tint) {
+            let tintLayer = CAGradientLayer()
+            tintLayer.frame = bounds
+            tintLayer.cornerRadius = cornerRadius
+            tintLayer.masksToBounds = true
+            tintLayer.compositingFilter = "softLightBlendMode"
+            if let colors = tintGradientColors, !colors.isEmpty {
+                tintLayer.colors = colors.map { $0.withIncreasedSaturation(factor: saturationBoost).cgColor }
+                tintLayer.startPoint = CGPoint(x: 0.5, y: 0)
+                tintLayer.endPoint = CGPoint(x: 0.5, y: 1)
+            } else {
+                tintLayer.backgroundColor = tintColorForGlass.withIncreasedSaturation(factor: saturationBoost).cgColor
+            }
+            tempLayer.addSublayer(tintLayer)
+        }
+
+        // DARKEN
+        if !filterExclusions.contains(.darken) {
+            let darken = CAGradientLayer()
+            darken.colors = [UIColor.black.withAlphaComponent(0.22).cgColor, UIColor.clear.cgColor]
+            darken.startPoint = CGPoint(x: 0.5, y: 1)
+            darken.endPoint = CGPoint(x: 0.5, y: 0)
+            darken.cornerRadius = cornerRadius
+            darken.compositingFilter = "multiplyBlendMode"
+            darken.frame = bounds
+            tempLayer.addSublayer(darken)
+        }
+
+        // HIGHLIGHT
+        if !filterExclusions.contains(.highlight) {
+            let highlight = CAGradientLayer()
+            highlight.colors = [
+                UIColor.white.withAlphaComponent(0.25).cgColor,
+                UIColor.clear.cgColor,
+                UIColor.white.withAlphaComponent(0.2).cgColor,
+                UIColor.white.withAlphaComponent(0.1).cgColor
+            ]
+            highlight.locations = [0.0, 0.25, 0.9, 1.0]
+            highlight.startPoint = CGPoint(x: 0, y: 0)
+            highlight.endPoint = CGPoint(x: 1, y: 1)
+            highlight.cornerRadius = cornerRadius
+            highlight.compositingFilter = "screenBlendMode"
+            highlight.frame = bounds
+            tempLayer.addSublayer(highlight)
+        }
+
+        // DEPTH
+        if !filterExclusions.contains(.depth) {
+            let innerDepth = CAGradientLayer()
+            innerDepth.colors = [
+                UIColor.black.withAlphaComponent(0.15).cgColor,
+                UIColor.clear.cgColor,
+                UIColor.white.withAlphaComponent(0.05).cgColor
+            ]
+            innerDepth.locations = [0.0, 0.6, 1.0]
+            innerDepth.startPoint = CGPoint(x: 0.5, y: 1)
+            innerDepth.endPoint = CGPoint(x: 0.5, y: 0)
+            innerDepth.cornerRadius = cornerRadius
+            innerDepth.compositingFilter = "softLightBlendMode"
+            innerDepth.frame = bounds
+            tempLayer.addSublayer(innerDepth)
+        }
+
+        // RIM
+        if !filterExclusions.contains(.rim) {
+            let rim = CALayer()
+            rim.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
+            rim.borderWidth = 0.8
+            rim.cornerRadius = cornerRadius
+            rim.frame = bounds
+            tempLayer.addSublayer(rim)
+        }
+
+        // INNER SHADOW
+        if !filterExclusions.contains(.innerShadow) {
+            let key = "innerShadow_\(Int(bounds.width))x\(Int(bounds.height))_\(cornerRadius)"
+            if let cached = renderCache.object(forKey: key as NSString) {
+                let shadowLayer = CALayer()
+                shadowLayer.frame = bounds
+                shadowLayer.contents = cached
+                tempLayer.addSublayer(shadowLayer)
+            } else {
+                UIGraphicsBeginImageContextWithOptions(bounds.size, false, UIScreen.main.scale)
+                if let ctx = UIGraphicsGetCurrentContext() {
+                    let path = UIBezierPath(roundedRect: bounds, cornerRadius: cornerRadius * 0.85)
+                    UIView().drawInnerShadow(
+                        path: path,
+                        shadowColor: UIColor.black.withAlphaComponent(0.5),
+                        offset: CGSize(width: 0, height: 2),
+                        blurRadius: 6
+                    )
+                    if let image = UIGraphicsGetImageFromCurrentImageContext()?.cgImage {
+                        renderCache.setObject(image, forKey: key as NSString)
+                        let shadowLayer = CALayer()
+                        shadowLayer.frame = bounds
+                        shadowLayer.contents = image
+                        tempLayer.addSublayer(shadowLayer)
+                    }
+                }
+                UIGraphicsEndImageContext()
+            }
+
+        }
+
+        // Render async
+        LiquidGlassView.renderQueue.async { [weak self] in
+            guard let self = self else { return }
+            UIGraphicsBeginImageContextWithOptions(size, false, UIScreen.main.scale)
+            if let ctx = UIGraphicsGetCurrentContext() {
+                tempLayer.render(in: ctx)
+            }
+            guard let renderedImage = UIGraphicsGetImageFromCurrentImageContext()?.cgImage else {
+                UIGraphicsEndImageContext()
+                return
+            }
+            UIGraphicsEndImageContext()
+            tempLayer.sublayers?.removeAll()
+
+            self.renderCache.setObject(renderedImage, forKey: key)
+            DispatchQueue.main.async {
+                self.decorLayer.contents = renderedImage
+            }
+        }
     }
 
     // MARK: - Layout
@@ -117,11 +389,18 @@ public class LiquidGlassView: UIView {
         super.layoutSubviews()
         blurView?.frame = bounds
         solidView?.frame = bounds
-        let layers = [tintLayer, darkenLayer, highlightLayer, depthLayer, rimLayer, innerShadowLayer]
-        layers.forEach { $0.frame = bounds; $0.cornerRadius = cornerRadius }
+        decorLayer.frame = bounds
 
+        if bounds.size != lastRenderedSize {
+            lastRenderedSize = bounds.size
+            renderDecorLayer()
+        }
+
+        layer.shadowPath = UIBezierPath(
+            roundedRect: bounds,
+            cornerRadius: cornerRadius * 0.85
+        ).cgPath
         updateCornersAndShadow()
-        updateGradientLayers()
     }
 
     private func updateCornersAndShadow() {
@@ -130,84 +409,100 @@ public class LiquidGlassView: UIView {
         layer.shadowOpacity = shadowOpacity
         layer.shadowRadius = shadowRadius
         layer.shadowOffset = shadowOffset
+        if #unavailable(iOS 8.0) {
+            layer.shouldRasterize = true
+            layer.rasterizationScale = UIScreen.main.scale
+        }
 
-        blurView?.layer.cornerRadius = cornerRadius
         solidView?.layer.cornerRadius = cornerRadius
+        blurView?.layer.cornerRadius = cornerRadius
     }
 
-    private func updateGradientLayers() {
-        if !filterExclusions.contains(.tint) {
-            if let colors = tintGradientColors, !colors.isEmpty {
-                tintLayer.colors = colors.map { $0.withIncreasedSaturation(factor: saturationBoost).cgColor }
-                tintLayer.startPoint = CGPoint(x: 0.5, y: 0)
-                tintLayer.endPoint = CGPoint(x: 0.5, y: 1)
-            } else {
-                tintLayer.backgroundColor = tintColorForGlass.withIncreasedSaturation(factor: saturationBoost).cgColor
-            }
-            tintLayer.compositingFilter = "softLightBlendMode"
-        }
-
-        if !filterExclusions.contains(.darken) {
-            darkenLayer.colors = [UIColor.black.withAlphaComponent(0.22).cgColor, UIColor.clear.cgColor]
-            darkenLayer.startPoint = CGPoint(x: 0.5, y: 1)
-            darkenLayer.endPoint = CGPoint(x: 0.5, y: 0)
-            darkenLayer.compositingFilter = "multiplyBlendMode"
-        }
-
-        if !filterExclusions.contains(.highlight) {
-            highlightLayer.colors = [
-                UIColor.white.withAlphaComponent(0.25).cgColor,
-                UIColor.clear.cgColor,
-                UIColor.white.withAlphaComponent(0.2).cgColor,
-                UIColor.white.withAlphaComponent(0.1).cgColor
-            ]
-            highlightLayer.locations = [0.0, 0.25, 0.9, 1.0]
-            highlightLayer.startPoint = CGPoint(x: 0, y: 0)
-            highlightLayer.endPoint = CGPoint(x: 1, y: 1)
-            highlightLayer.compositingFilter = "screenBlendMode"
-        }
-
-        if !filterExclusions.contains(.depth) {
-            depthLayer.colors = [
-                UIColor.black.withAlphaComponent(0.15).cgColor,
-                UIColor.clear.cgColor,
-                UIColor.white.withAlphaComponent(0.05).cgColor
-            ]
-            depthLayer.locations = [0.0, 0.6, 1.0]
-            depthLayer.startPoint = CGPoint(x: 0.5, y: 1)
-            depthLayer.endPoint = CGPoint(x: 0.5, y: 0)
-            depthLayer.compositingFilter = "softLightBlendMode"
-        }
-
-        if !filterExclusions.contains(.rim) {
-            rimLayer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
-            rimLayer.borderWidth = 0.8
-        }
-
-        if !filterExclusions.contains(.innerShadow) {
-            drawInnerShadowDynamic()
-        }
-    }
-
-    private func drawInnerShadowDynamic() {
-        UIGraphicsBeginImageContextWithOptions(bounds.size, false, UIScreen.main.scale)
-        defer { UIGraphicsEndImageContext() }
-        let path = UIBezierPath(roundedRect: bounds, cornerRadius: cornerRadius * 0.85)
-        UIView().drawInnerShadow(
-            path: path,
-            shadowColor: UIColor.black.withAlphaComponent(0.5),
-            offset: CGSize(width: 0, height: 2),
-            blurRadius: 6
-        )
-        if let image = UIGraphicsGetImageFromCurrentImageContext()?.cgImage {
-            innerShadowLayer.contents = image
-        }
-    }
-
+    private func applySaturationBoost() { }
+    
     public func updateBlur() {
+        // Remove old views
         blurView?.removeFromSuperview()
         solidView?.removeFromSuperview()
-        setupBlurOrSolidView()
+        blurView = nil
+        solidView = nil
+
+        if self.disableBlur {
+            // Replace with solid view
+            let solid = UIView(frame: bounds)
+            solid.backgroundColor = solidViewColour
+            solid.layer.cornerRadius = cornerRadius
+            solid.layer.masksToBounds = true
+            addSubview(solid)
+            solidView = solid
+
+        } else {
+            // Restore blur view depending on iOS version
+            if #available(iOS 14.0, *) {
+                let blur = VisualEffectView()
+                blur.colorTint = .clear
+                blur.blurRadius = blurRadius
+                blur.layer.cornerRadius = cornerRadius
+                blur.layer.masksToBounds = true
+                blur.frame = bounds
+                blurView = blur
+                addSubview(blur)
+                sendSubviewToBack(blur)
+
+            } else if #available(iOS 9.0, *) {
+                let blur = VisualEffectView1()
+                blur.blurRadius = blurRadius
+                blur.layer.cornerRadius = cornerRadius
+                blur.layer.masksToBounds = true
+                blur.frame = bounds
+                blurView = blur
+                addSubview(blur)
+                sendSubviewToBack(blur)
+
+            } else {
+                let blur = LFGlassView(frame: bounds)
+                blur.snapshotTargetView = snapshotTargetView
+                blur.blurRadius = blurRadius
+                blur.scaleFactor = scaleFactor
+                blur.frameInterval = UInt(frameInterval)
+                blur.isLiveBlurring = isLiveBlurring
+                blur.layer.cornerRadius = cornerRadius
+                blur.layer.masksToBounds = true
+                blurView = blur
+                addSubview(blur)
+            }
+        }
+
+        setNeedsLayout()
+        layoutIfNeeded()
+        renderDecorLayer()
+    }
+
+}
+
+// MARK: - Cache
+fileprivate extension UIColor {
+    var hexValue: UInt32 {
+        var r: CGFloat = 0
+        var g: CGFloat = 0
+        var b: CGFloat = 0
+        var a: CGFloat = 0
+        getRed(&r, green: &g, blue: &b, alpha: &a)
+        let ri = UInt32(r * 255) << 24
+        let gi = UInt32(g * 255) << 16
+        let bi = UInt32(b * 255) << 8
+        let ai = UInt32(a * 255)
+        return ri | gi | bi | ai
+    }
+}
+
+public final class LiquidGlassCache {
+    public static let shared = LiquidGlassCache()
+    public let cache = NSCache<NSString, CGImage>()
+
+    public init() {
+        cache.countLimit = 300
+        cache.totalCostLimit = 80_000_000
     }
 }
 
