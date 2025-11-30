@@ -130,7 +130,11 @@ public class LiquidGlassView: UIView {
     public var blurView: UIView?
     public var solidView: UIView?
 
-    private var decorLayer = CALayer()
+    private var decorLayer: CALayer = {
+        let layer = CALayer()
+        layer.drawsAsynchronously = true
+        return layer
+    }()
     private static let renderQueue = DispatchQueue(label: "com.yourapp.liquidglass.render", attributes: .concurrent, target: .global(qos: .userInitiated))
     private var renderCache: NSCache<NSString, CGImage> { LiquidGlassCache.shared.cache }
     private var lastRenderedSize: CGSize = .zero
