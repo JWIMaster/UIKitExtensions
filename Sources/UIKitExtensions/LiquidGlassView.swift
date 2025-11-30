@@ -239,8 +239,11 @@ public class LiquidGlassView: UIView {
     }
 
     // MARK: - Render Decor Layer
+    // MARK: - Render Decor Layer (Core Image version)
     private func renderDecorLayer() {
         let size = bounds.size
+        guard size.width > 0, size.height > 0, self.window != nil, self.frame != .zero, !self.isHidden else { return }
+
         var key: NSString
         if let colors = tintGradientColors, !colors.isEmpty {
             key = cacheKey(for: size, color: colors.first!)
@@ -253,12 +256,18 @@ public class LiquidGlassView: UIView {
             return
         }
 
-        guard bounds.width > 0, bounds.height > 0, self.window != nil, self.frame != .zero, self.isHidden != true else { return }
-
-
+        // Prepare a temporary layer tree as before
         let tempLayer = CALayer()
+        tempLayer.frame = bounds
+        tempLayer.cornerRadius = cornerRadius
+        tempLayer.masksToBounds = true
 
-        // TINT
+        // Add all sublayers as before (tint, darken, highlight, depth, rim, inner shadow)
+        func addLayerSafely(_ layer: CALayer?) {
+            guard let layer = layer else { return }
+            tempLayer.addSublayer(layer)
+        }
+
         if !filterExclusions.contains(.tint) {
             let tintLayer = CAGradientLayer()
             tintLayer.frame = bounds
@@ -272,10 +281,9 @@ public class LiquidGlassView: UIView {
             } else {
                 tintLayer.backgroundColor = tintColorForGlass.withIncreasedSaturation(factor: saturationBoost).cgColor
             }
-            tempLayer.addSublayer(tintLayer)
+            addLayerSafely(tintLayer)
         }
 
-        // DARKEN
         if !filterExclusions.contains(.darken) {
             let darken = CAGradientLayer()
             darken.colors = [UIColor.black.withAlphaComponent(0.22).cgColor, UIColor.clear.cgColor]
@@ -284,10 +292,9 @@ public class LiquidGlassView: UIView {
             darken.cornerRadius = cornerRadius
             darken.compositingFilter = "multiplyBlendMode"
             darken.frame = bounds
-            tempLayer.addSublayer(darken)
+            addLayerSafely(darken)
         }
 
-        // HIGHLIGHT
         if !filterExclusions.contains(.highlight) {
             let highlight = CAGradientLayer()
             highlight.colors = [
@@ -302,10 +309,9 @@ public class LiquidGlassView: UIView {
             highlight.cornerRadius = cornerRadius
             highlight.compositingFilter = "screenBlendMode"
             highlight.frame = bounds
-            tempLayer.addSublayer(highlight)
+            addLayerSafely(highlight)
         }
 
-        // DEPTH
         if !filterExclusions.contains(.depth) {
             let innerDepth = CAGradientLayer()
             innerDepth.colors = [
@@ -319,62 +325,49 @@ public class LiquidGlassView: UIView {
             innerDepth.cornerRadius = cornerRadius
             innerDepth.compositingFilter = "softLightBlendMode"
             innerDepth.frame = bounds
-            tempLayer.addSublayer(innerDepth)
+            addLayerSafely(innerDepth)
         }
 
-        // RIM
         if !filterExclusions.contains(.rim) {
             let rim = CALayer()
             rim.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
             rim.borderWidth = 0.8
             rim.cornerRadius = cornerRadius
             rim.frame = bounds
-            tempLayer.addSublayer(rim)
+            addLayerSafely(rim)
         }
 
-        // INNER SHADOW
         if !filterExclusions.contains(.innerShadow) {
-            let key = "innerShadow_\(Int(bounds.width))x\(Int(bounds.height))_\(cornerRadius)"
-            if let cached = renderCache.object(forKey: key as NSString) {
-                let shadowLayer = CALayer()
-                shadowLayer.frame = bounds
+            let shadowLayer = CALayer()
+            shadowLayer.frame = bounds
+            let shadowKey = "innerShadow_\(Int(bounds.width))x\(Int(bounds.height))_\(cornerRadius)"
+            if let cached = renderCache.object(forKey: shadowKey as NSString) {
                 shadowLayer.contents = cached
-                tempLayer.addSublayer(shadowLayer)
             } else {
                 UIGraphicsBeginImageContextWithOptions(bounds.size, false, UIScreen.main.scale)
-                if let ctx = UIGraphicsGetCurrentContext() {
-                    let path = UIBezierPath(roundedRect: bounds, cornerRadius: cornerRadius * 0.85)
-                    UIView().drawInnerShadow(
-                        path: path,
-                        shadowColor: UIColor.black.withAlphaComponent(0.5),
-                        offset: CGSize(width: 0, height: 2),
-                        blurRadius: 6
-                    )
-                    if let image = UIGraphicsGetImageFromCurrentImageContext()?.cgImage {
-                        renderCache.setObject(image, forKey: key as NSString)
-                        let shadowLayer = CALayer()
-                        shadowLayer.frame = bounds
-                        shadowLayer.contents = image
-                        tempLayer.addSublayer(shadowLayer)
-                    }
+                let path = UIBezierPath(roundedRect: bounds, cornerRadius: cornerRadius * 0.85)
+                UIView().drawInnerShadow(path: path, shadowColor: UIColor.black.withAlphaComponent(0.5), offset: CGSize(width: 0, height: 2), blurRadius: 6)
+                if let image = UIGraphicsGetImageFromCurrentImageContext()?.cgImage {
+                    renderCache.setObject(image, forKey: shadowKey as NSString)
+                    shadowLayer.contents = image
                 }
                 UIGraphicsEndImageContext()
             }
-
+            addLayerSafely(shadowLayer)
         }
 
-        // Render async
+        // MARK: - Core Image Async Rendering
         LiquidGlassView.renderQueue.async { [weak self] in
             guard let self = self else { return }
-            UIGraphicsBeginImageContextWithOptions(size, false, UIScreen.main.scale)
-            if let ctx = UIGraphicsGetCurrentContext() {
-                tempLayer.render(in: ctx)
-            }
-            guard let renderedImage = UIGraphicsGetImageFromCurrentImageContext()?.cgImage else {
-                UIGraphicsEndImageContext()
-                return
-            }
-            UIGraphicsEndImageContext()
+
+            // Convert CALayer tree to CIImage
+            let ciImage = self.ciImage(from: tempLayer, size: size)
+            guard let ciImage = ciImage else { return }
+
+            // Render CIImage to CGImage
+            let ciContext = CIContext(options: [.useSoftwareRenderer: false])
+            guard let renderedImage = ciContext.createCGImage(ciImage, from: CGRect(origin: .zero, size: size)) else { return }
+
             tempLayer.sublayers?.removeAll()
 
             self.renderCache.setObject(renderedImage, forKey: key)
@@ -383,6 +376,57 @@ public class LiquidGlassView: UIView {
             }
         }
     }
+
+    // MARK: - Helper: Convert CALayer -> CIImage
+    private func ciImage(from layer: CALayer, size: CGSize) -> CIImage? {
+        // Start with a transparent background
+        var ciImage = CIImage(color: CIColor(red: 0, green: 0, blue: 0, alpha: 0))
+            .cropped(to: CGRect(origin: .zero, size: size))
+
+        func composite(_ top: CIImage, over bottom: CIImage) -> CIImage? {
+            if #available(iOS 8.0, *) {
+                return top.composited(over: bottom)
+            } else {
+                guard let filter = CIFilter(name: "CISourceOverCompositing") else { return nil }
+                filter.setValue(top, forKey: kCIInputImageKey)
+                filter.setValue(bottom, forKey: kCIInputBackgroundImageKey)
+                return filter.outputImage
+            }
+        }
+
+        // Background color
+        if let bg = layer.backgroundColor {
+            let bgCI = CIImage(color: CIColor(cgColor: bg))
+                .cropped(to: CGRect(origin: .zero, size: size))
+            if let composed = composite(bgCI, over: ciImage) {
+                ciImage = composed
+            }
+        }
+
+        // Sublayers
+        layer.sublayers?.forEach { sublayer in
+            if let grad = sublayer as? CAGradientLayer {
+                // Simple fallback: use first gradient color
+                if let colors = grad.colors as? [CGColor], let first = colors.first {
+                    let subCI = CIImage(color: CIColor(cgColor: first))
+                        .cropped(to: grad.frame)
+                    if let composed = composite(subCI, over: ciImage) {
+                        ciImage = composed
+                    }
+                }
+            } else  {
+                let subCG = sublayer.contents as! CGImage
+                let subCI = CIImage(cgImage: subCG)
+                    .transformed(by: .init(translationX: sublayer.frame.origin.x, y: sublayer.frame.origin.y))
+                if let composed = composite(subCI, over: ciImage) {
+                    ciImage = composed
+                }
+            }
+        }
+
+        return ciImage
+    }
+
 
     // MARK: - Layout
     public override func layoutSubviews() {
