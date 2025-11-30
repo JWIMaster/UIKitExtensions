@@ -366,22 +366,36 @@ public class LiquidGlassView: UIView {
         // Render async
         LiquidGlassView.renderQueue.async { [weak self] in
             guard let self = self else { return }
-            UIGraphicsBeginImageContextWithOptions(size, false, UIScreen.main.scale)
-            if let ctx = UIGraphicsGetCurrentContext() {
-                tempLayer.render(in: ctx)
-            }
-            guard let renderedImage = UIGraphicsGetImageFromCurrentImageContext()?.cgImage else {
-                UIGraphicsEndImageContext()
-                return
-            }
-            UIGraphicsEndImageContext()
-            tempLayer.sublayers?.removeAll()
 
-            self.renderCache.setObject(renderedImage, forKey: key)
+            let renderedImage: CGImage?
+
+            if #available(iOS 7.0, *) {
+                // Use drawHierarchy on main thread
+                renderedImage = DispatchQueue.main.sync {
+                    UIGraphicsBeginImageContextWithOptions(self.bounds.size, false, UIScreen.main.scale)
+                    self.drawHierarchy(in: self.bounds, afterScreenUpdates: true)
+                    let image = UIGraphicsGetImageFromCurrentImageContext()?.cgImage
+                    UIGraphicsEndImageContext()
+                    return image
+                }
+            } else {
+                // Use render(in:) off-main-thread
+                UIGraphicsBeginImageContextWithOptions(self.bounds.size, false, UIScreen.main.scale)
+                tempLayer.render(in: UIGraphicsGetCurrentContext()!)
+                renderedImage = UIGraphicsGetImageFromCurrentImageContext()?.cgImage
+                UIGraphicsEndImageContext()
+            }
+
+            guard let finalImage = renderedImage else { return }
+
+            tempLayer.sublayers?.removeAll()
+            self.renderCache.setObject(finalImage, forKey: key)
+
             DispatchQueue.main.async {
-                self.decorLayer.contents = renderedImage
+                self.decorLayer.contents = finalImage
             }
         }
+
     }
 
     // MARK: - Layout
