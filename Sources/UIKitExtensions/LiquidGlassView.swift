@@ -147,7 +147,7 @@ public class LiquidGlassView: UIView {
     public init(
         blurRadius: CGFloat = 12,
         cornerRadius: CGFloat = 50,
-        snapshotTargetView: UIView?,
+        snapshotTargetView: UIView? = nil,
         disableBlur: Bool = false,
         filterExclusions: [AdvancedFilterOptions]
     ) {
@@ -185,7 +185,7 @@ public class LiquidGlassView: UIView {
     public convenience init(
         blurRadius: CGFloat = 12,
         cornerRadius: CGFloat = 50,
-        snapshotTargetView: UIView?,
+        snapshotTargetView: UIView? = nil,
         disableBlur: Bool = false
     ) {
         self.init(

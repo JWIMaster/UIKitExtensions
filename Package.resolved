@@ -1,12 +1,39 @@
 {
   "pins" : [
     {
+      "identity" : "diffabledatasources",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/JWIMaster/DiffableDataSources",
+      "state" : {
+        "branch" : "master",
+        "revision" : "f931852f132881ad104d60eb2d3feea09cf3bc35"
+      }
+    },
+    {
+      "identity" : "differencekit",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/JWIMaster/DifferenceKit",
+      "state" : {
+        "branch" : "master",
+        "revision" : "3e3107bdbd9987e70b7b4e38eb39b1d3bbe8714c"
+      }
+    },
+    {
       "identity" : "foundationcompatkit",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/JWIMaster/FoundationCompatKit.git",
       "state" : {
         "branch" : "master",
-        "revision" : "f3a201e8c1cca5121528cc6531dd0ef11d9039cb"
+        "revision" : "bdc58f92c1fdf67a102698bb57effbacbed5e367"
+      }
+    },
+    {
+      "identity" : "ibpcollectionviewcompositionallayout",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/JWIMaster/IBPCollectionViewCompositionalLayout",
+      "state" : {
+        "branch" : "master",
+        "revision" : "0eea00d36de5f4d14c8e55752ab7b518d54eadd7"
       }
     },
     {
@@ -15,7 +42,7 @@
       "location" : "https://github.com/JWIMaster/UIKitCompatKit",
       "state" : {
         "branch" : "master",
-        "revision" : "849fc58f7c1779391ba5e8efe6bf670d9c0db770"
+        "revision" : "daff93fb245678dba13448edbd557c1ffca1385b"
       }
     }
   ],
