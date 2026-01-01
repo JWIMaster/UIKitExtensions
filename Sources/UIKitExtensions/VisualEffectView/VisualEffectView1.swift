@@ -9,7 +9,7 @@
 import UIKit
 
 /// VisualEffectView is a dynamic background blur view.
-@available(iOS 8.0, *)
+@available(iOS 9.0, *)
 open class VisualEffectView1: UIVisualEffectView {
     
     /// Returns the instance of UIBlurEffect.

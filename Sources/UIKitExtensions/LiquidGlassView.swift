@@ -62,42 +62,6 @@ public class LiquidGlassView: UIView {
         }
     }
 
-    public var scaleFactor: CGFloat = 0.4 {
-        didSet {
-            guard !isInitialising else { return }
-            if let blurView = self.blurView as? LFGlassView {
-                blurView.scaleFactor = scaleFactor
-            }
-        }
-    }
-
-    public var frameInterval: Int = 3 {
-        didSet {
-            guard !isInitialising else { return }
-            if let blurView = self.blurView as? LFGlassView {
-                blurView.frameInterval = UInt(frameInterval)
-            }
-        }
-    }
-
-    public var isLiveBlurring: Bool = true {
-        didSet {
-            guard !isInitialising else { return }
-            if let blurView = self.blurView as? LFGlassView {
-                blurView.isLiveBlurring = isLiveBlurring
-            }
-        }
-    }
-
-    public weak var snapshotTargetView: UIView? {
-        didSet {
-            guard !isInitialising else { return }
-            if let blurView = self.blurView as? LFGlassView {
-                blurView.snapshotTargetView = snapshotTargetView
-            }
-        }
-    }
-
     public var tintColorForGlass: UIColor = UIColor.blue.withAlphaComponent(0.05) {
         didSet {
             guard !isInitialising else { return }
@@ -155,7 +119,6 @@ public class LiquidGlassView: UIView {
         super.init(frame: .zero)
         self.cornerRadius = cornerRadius
         self.blurRadius = blurRadius
-        self.snapshotTargetView = snapshotTargetView
         self.disableBlur = disableBlur
 
         if !disableBlur {
@@ -461,11 +424,7 @@ public class LiquidGlassView: UIView {
 
             } else {
                 let blur = LFGlassView(frame: bounds)
-                blur.snapshotTargetView = snapshotTargetView
                 blur.blurRadius = blurRadius
-                blur.scaleFactor = scaleFactor
-                blur.frameInterval = UInt(frameInterval)
-                blur.isLiveBlurring = isLiveBlurring
                 blur.layer.cornerRadius = cornerRadius
                 blur.layer.masksToBounds = true
                 blurView = blur
