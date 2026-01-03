@@ -41,6 +41,21 @@ public extension UIImage {
         
         return newImage ?? image
     }
+    
+    func resizeImage(targetSize: CGSize, cornerRadius: CGFloat = 0) -> UIImage {
+        UIGraphicsBeginImageContextWithOptions(targetSize, false, 0.0)
+        let rect = CGRect(origin: .zero, size: targetSize)
+        
+        // Clip to rounded rect
+        UIBezierPath(roundedRect: rect, cornerRadius: cornerRadius).addClip()
+        
+        self.draw(in: rect)
+        
+        let newImage = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+        
+        return newImage ?? self
+    }
 
     
     enum ThumbnailQuality {
